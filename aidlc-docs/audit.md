@@ -173,3 +173,84 @@
 **Context**: Units Generation stage, Part 2 Generation complete.
 
 ---
+
+## Units Generation - Final Approval
+**Timestamp**: 2026-08-15T01:45:00Z
+**AI Prompt**: "Approve & Continue - Approve units and proceed to CONSTRUCTION PHASE?"
+**User Response**: "Approve and continue."
+**Status**: Approved
+**Context**: INCEPTION PHASE complete. Proceeding to CONSTRUCTION PHASE, starting with Unit 1 (Provider Abstraction & Auto-Instrumentation).
+
+---
+
+## Unit 1 - Construction Kickoff
+**Timestamp**: 2026-08-15T01:50:00Z
+**AI Response**: Created git branch `unit/01-provider-abstraction` off `main`. Assessed per-unit Construction stages for Unit 1: Functional Design = EXECUTE (LogEvent contract, streaming latency measurement, and status/cancellation handling all need pinning down before Unit 3 depends on them), NFR Requirements/NFR Design/Infrastructure Design = SKIP (tech stack fixed, no new security/scalability/infra concerns specific to this unit). Created `construction/plans/unit-01-provider-abstraction-functional-design-plan.md` with 5 questions covering the LogEvent contract shape, streaming latency measurement, token counting source, publish-failure behavior, and cancellation status handling.
+**Context**: Unit 1, Functional Design stage, planning.
+
+---
+
+## Unit 1 - Functional Design Q4 Discussion (Dead Letter Queue)
+**Timestamp**: 2026-08-15T01:55:00Z
+**User Input**: "For option 4, do we have a dead letter cue also?"
+**AI Response**: Clarified that a DLQ doesn't apply at the publish-failure point (event never entered the queue, nothing to dead-letter) but does fit Unit 3's ingestion pipeline (a failed_log_events table for events that fail mid-pipeline after being dequeued) — flagged for Unit 3's own Functional Design rather than decided now.
+**Context**: Unit 1, Functional Design planning, in-progress question answering.
+
+---
+
+## Unit 1 - Functional Design Answers & Artifacts Generated
+**Timestamp**: 2026-08-15T02:00:00Z
+**User Input**: "A" (Question 4 = swallow + log locally)
+**AI Response**: All 5 questions answered: Q1=B (LogEvent with open `extra` dict), Q2=A (measure both ttft and total duration), Q3=A (provider's own token counts), Q4=A (swallow publish failures), Q5=A (dedicated "cancelled" status). No ambiguity found. Generated `construction/unit-01-provider-abstraction/functional-design/domain-entities.md` (LogEvent value object), `business-rules.md` (9 rules, including BR9 explicitly noting DLQ doesn't belong in this unit), and `business-logic-model.md` (send/stream logic flows, key invariant: instrumentation failures always swallowed, provider failures always propagated).
+**Context**: Unit 1, Functional Design stage complete.
+
+---
+
+## Unit 1 - Functional Design Approval
+**Timestamp**: 2026-08-15T02:05:00Z
+**AI Prompt**: "Continue to Next Stage - Approve functional design and proceed to Code Generation?"
+**User Response**: "Continue to next stage."
+**Status**: Approved
+**Context**: Unit 1 Functional Design approved. NFR Requirements/Design and Infrastructure Design confirmed skipped per earlier assessment. Proceeding to Code Generation.
+
+---
+
+## Unit 1 - Code Generation Planning
+**Timestamp**: 2026-08-16T09:00:00Z
+**AI Response**: Created `construction/plans/unit-01-provider-abstraction-code-generation-plan.md`. Scoped to business-logic-only (no API/Repository/Frontend/DB/Deployment steps — all N/A for this unit, explicitly noted with rationale). Proposed tooling: Python 3.12, `uv` for env management (consistent with the alarm-clock AIDLC project precedent), `google-genai` SDK, `pytest`/`pytest-asyncio`. 4 steps: Project Structure Setup, Business Logic Generation (models/interface/event_queue/gemini_provider/instrumented_provider), Business Logic Unit Testing (test doubles + instrumented-provider + gemini-provider tests), Business Logic Summary.
+**AI Prompt**: "Review the code generation plan. Ready to proceed to generation?"
+**Context**: Unit 1, Code Generation stage, Part 1 Planning.
+
+---
+
+## Unit 1 - Code Generation Complete
+**Timestamp**: 2026-08-16T09:30:00Z
+**User Input**: "Yes, I'm ready to generate one more thing like this will be in the same branch, right?" (confirmed still on `unit/01-provider-abstraction`)
+**AI Response**: Generated all files per the approved plan: `backend/pyproject.toml`, `.python-version`, `src/provider/{models,interface,event_queue,gemini_provider,instrumented_provider,__init__}.py`, `tests/provider/{doubles,test_instrumented_provider,test_gemini_provider,__init__}.py`, `tests/__init__.py`, root `README.md` (Getting Started stub), and `aidlc-docs/construction/unit-01-provider-abstraction/code/summary.md` (documenting 3 implementation decisions made beyond the functional design: conversation_id/session_id as part of the LLMProvider interface itself, Token carrying optional per-chunk usage data, and relying on CancelledError being a BaseException subclass to keep BR5/BR8 mutually exclusive without extra branching). Ran `uv sync` (32 packages installed cleanly) and `uv run pytest -v`: 7/7 tests passed, including the cancellation-with-partial-output scenario. Verified `.venv`/`__pycache__` correctly excluded by `.gitignore`, `uv.lock` correctly tracked.
+**Context**: Unit 1, Code Generation stage, Part 2 Generation complete, all plan steps marked [x].
+
+---
+
+## Unit 1 Review - EventQueue Location Question
+**Timestamp**: 2026-08-16T10:00:00Z
+**User Input**: "We have to find the Q interface, but haven't any implemented any queue. Does that needs to be implemented in this unit? If not, why have we defined the interface now?"
+**AI Response**: Clarified InProcessEventQueue is correctly deferred to Unit 3; the interface exists now because InstrumentedProvider needs a real abstraction to depend on (DIP) and Unit 1's own tests need FakeEventQueue to satisfy that interface — not scope creep, since the interface has a real consumer today.
+**Context**: Unit 1, post-code-generation review, pre-merge.
+
+---
+
+## Unit 1 Review - Directory Placement Question
+**Timestamp**: 2026-08-16T10:05:00Z
+**User Input**: "No, then my question is why does the event queue is in the provider, directory?..."
+**AI Response**: Acknowledged this as a genuine gap in the Units Generation Q4 code-organization decision, which didn't account for contracts shared between units. Proposed relocating EventQueue (and LogEvent, same problem) to a new shared events/ package.
+**Context**: Unit 1, post-code-generation review, pre-merge.
+
+---
+
+## Cross-Unit Structural Redesign
+**Timestamp**: 2026-08-16T10:10:00Z
+**User Input**: "Yes, I want to... I want you to first define the interface and models for all the project... define the project structure... then define interfaces... then we will start moving on unit by unit."
+**AI Response**: Created `inception/application-design/project-structure.md` (full backend/src tree for all 6 units, with two new shared packages: db/ and events/) and `shared-contracts.md` (every cross-unit interface fully specified: EventQueue, LogEvent, User/Session/Conversation/ChatMessage/LogRecord models, UserRepository/ConversationRepository/MessageRepository/LogRepository interfaces, MetricBucket). Noted one refinement vs. the approved Application Design: AuthService.validate_session collapses UserContext into User directly. Created the db/ and events/ packages as real Python (ABCs + pydantic models, no concrete implementations - those remain each owning unit's Code Generation deliverable). Created placeholder __init__.py stubs for chat/, ingestion/, analytics/, auth/, api/ (units 2-5). Moved LogEvent/EventQueue out of provider/ into events/, updated provider/models.py, provider/__init__.py, provider/instrumented_provider.py, and tests/provider/doubles.py imports accordingly. Updated pyproject.toml's hatchling packages list to include all 8 top-level packages. Added tests/events/test_log_event.py and tests/db/test_models.py covering the new shared contracts directly. Updated unit-of-work.md to point to project-structure.md as authoritative. Re-ran uv sync + uv run pytest: 14/14 passing (7 original + 7 new).
+**Context**: Unit 1, structural correction before merge. This work stays on branch `unit/01-provider-abstraction` alongside Unit 1's own code, since it was discovered during Unit 1's review and directly fixes Unit 1's output.
+
+---
