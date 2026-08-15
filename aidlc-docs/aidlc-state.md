@@ -15,6 +15,10 @@
 - **Documentation**: aidlc-docs/ only
 - **Structure patterns**: See code-generation.md Critical Rules
 
+## Development Workflow
+- **Git**: Repository initialized on `main` (baseline commit: Inception phase docs). `.gitignore` excludes AI-DLC framework files (`CLAUDE.md`, `.aidlc-rule-details/`) — deliverable repo only.
+- **Branching convention**: One branch per unit of work, e.g. `unit/01-provider-abstraction`. A unit's branch is merged into `main` after its Construction per-unit gate (Code Generation + Build & Test) passes, before starting the next unit's branch. No per-story branches — units already align with AI-DLC's per-unit approval gate.
+
 ## Extension Configuration
 | Extension | Enabled | Decided At |
 |---|---|---|
@@ -30,7 +34,7 @@
 - [x] User Stories (13 stories / 6 epics, approved)
 - [x] Workflow Planning
 - [x] Application Design
-- [ ] Units Generation — IN PROGRESS (planning, questions issued)
+- [x] Units Generation (6 units defined, awaiting approval)
 
 ### 🟢 CONSTRUCTION PHASE
 - [ ] Per-unit design + code generation — TBD after Units Generation

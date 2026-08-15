@@ -156,3 +156,20 @@
 **Context**: Units Generation stage, Part 1 Planning, Steps 6-8 complete.
 
 ---
+
+## Units Generation - Plan Approval & Git Setup
+**Timestamp**: 2026-08-15T01:35:00Z
+**AI Prompt**: "Unit of work plan complete. Review the plan in aidlc-docs/inception/plans/unit-of-work-plan.md. Ready to proceed to generation?"
+**User Response**: "Yes, proceed to generation, but before that, I want you to commit the code, well, like, I want for each unit or each story. I want to do it in a separate branch and then merge into my main branch after each so that in that way I'll be able to like test everything incrementally."
+**Status**: Approved (plan), plus new workflow requirement
+**AI Response**: Recommended branch-per-unit (not per-story) since units already align with Construction's per-unit approval gate; user's phrasing left the granularity open ("each unit or each story"). Initialized git (`git init -b main`), added `.gitignore` excluding `CLAUDE.md` and `.aidlc-rule-details/` (matching the precedent set on the alarm-clock AIDLC project), committed all Inception-phase docs as the baseline on `main`. Documented the branching convention in `aidlc-state.md` under a new "Development Workflow" section.
+**Context**: Units Generation stage, transition from Part 1 Planning to Part 2 Generation.
+
+---
+
+## Units Generation - Artifacts Generated
+**Timestamp**: 2026-08-15T01:40:00Z
+**AI Response**: Generated `application-design/unit-of-work.md` (6 units, 1:1 with story epics, single-process backend, code organization per Q4, cross-cutting decision to design `user_id` scoping into schema from Unit 2 onward using a seeded stub user until Unit 5's real auth), `unit-of-work-dependency.md` (strictly sequential dependency chain — no parallelization opportunity in a single-process monolith; rollback strategy tied to the per-unit branch convention), and `unit-of-work-story-map.md` (all 13 stories mapped; noted that US-2.1/2.2/2.3/4.1 span two units since their acceptance criteria describe UI behavior not demonstrable until Unit 5). Validated: no orphan stories.
+**Context**: Units Generation stage, Part 2 Generation complete.
+
+---

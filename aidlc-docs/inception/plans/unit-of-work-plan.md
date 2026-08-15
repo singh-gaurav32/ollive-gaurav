@@ -8,10 +8,10 @@
 - [x] Confirm frontend delivery slicing (see Question 2) — A: one frontend unit, built last
 - [x] Confirm unit-to-epic mapping (see Question 3) — A: 1:1 with the 6 story epics
 - [x] Confirm code organization / directory structure (see Question 4) — A: backend/ + frontend/ split
-- [ ] Generate `application-design/unit-of-work.md` — unit definitions, responsibilities, code organization
-- [ ] Generate `application-design/unit-of-work-dependency.md` — dependency matrix between units
-- [ ] Generate `application-design/unit-of-work-story-map.md` — story-to-unit mapping
-- [ ] Validate: every story from `stories.md` assigned to exactly one unit
+- [x] Generate `application-design/unit-of-work.md` — unit definitions, responsibilities, code organization
+- [x] Generate `application-design/unit-of-work-dependency.md` — dependency matrix between units
+- [x] Generate `application-design/unit-of-work-story-map.md` — story-to-unit mapping
+- [x] Validate: every story from `stories.md` assigned to exactly one unit
 
 ## Deferred Decision: Redis Streams Swap Testing
 
