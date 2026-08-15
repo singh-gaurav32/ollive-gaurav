@@ -254,3 +254,27 @@
 **Context**: Unit 1, structural correction before merge. This work stays on branch `unit/01-provider-abstraction` alongside Unit 1's own code, since it was discovered during Unit 1's review and directly fixes Unit 1's output.
 
 ---
+
+## Unit 1 - Merged, Unit 2 Started
+**Timestamp**: 2026-08-16T10:20:00Z
+**User Input**: "Yes, sure, we can move to unit 2 now."
+**Status**: Approved
+**AI Response**: Merged `unit/01-provider-abstraction` into `main` (--no-ff, 48 files). Created branch `unit/02-chatbot-spine` off `main`.
+**Context**: Unit 1 complete. Starting Unit 2 (Chatbot Spine).
+
+---
+
+## Unit 2 - Functional Design Planning
+**Timestamp**: 2026-08-16T10:25:00Z
+**AI Response**: Assessed Unit 2 per-unit stages: Functional Design=EXECUTE, NFR Requirements=EXECUTE (DB tech stack decision was deliberately deferred), NFR Design=EXECUTE, Infrastructure Design=SKIP. Created `construction/plans/unit-02-chatbot-spine-functional-design-plan.md` with 5 questions: context truncation strategy, concurrent-conversation policy, message persistence timing, seed-user policy for pre-auth isolation testing, and chat-turn error handling.
+**Context**: Unit 2, Functional Design stage, planning.
+
+---
+
+## Unit 2 - Functional Design Answers & Artifacts Generated
+**Timestamp**: 2026-08-16T10:35:00Z
+**User Input**: "For our option, when we can use the strategy, design better, right? Or and for now, define an interface and use the window truncation." (Q1); Q2=A, Q3=A, Q4=A, Q5=A answered directly in file.
+**AI Response**: Recorded Q1 as Strategy pattern (ContextTruncationStrategy interface + WindowTruncationStrategy default, 10 turn-pairs), placed in chat/ (unit-owned, not shared, since only ChatService calls it - applying the ownership principle from the Unit 1 restructuring). All 5 answers analyzed: no ambiguity, no contradictions. Surfaced one implicit consequence of the combined answers: the user's message persists immediately regardless of assistant-turn outcome (Q5 only discards partial *assistant* content), and cancellation requires an in-memory task registry to reach the specific in-flight stream. Generated `construction/unit-02-chatbot-spine/functional-design/domain-entities.md` (conversation lifecycle state diagram, ContextTruncationStrategy spec, active-stream registry), `business-rules.md` (7 rules), and `business-logic-model.md` (full send_message/cancel_conversation/resume_conversation/list_conversations flows). Key invariant: every state-changing method checks ownership via ConversationRepository.get() before doing anything else.
+**Context**: Unit 2, Functional Design stage complete.
+
+---

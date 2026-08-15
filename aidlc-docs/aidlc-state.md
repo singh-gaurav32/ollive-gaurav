@@ -37,13 +37,14 @@
 - [x] Units Generation (6 units defined, awaiting approval)
 
 ### 🟢 CONSTRUCTION PHASE
-- **Unit 1 — Provider Abstraction & Auto-Instrumentation** (branch: `unit/01-provider-abstraction`)
-  - [x] Functional Design (LogEvent contract, business rules, logic model)
-  - [x] NFR Requirements — SKIPPED (no new tech/security/scalability concerns for this unit)
-  - [x] NFR Design — SKIPPED (follows NFR Requirements)
-  - [x] Infrastructure Design — SKIPPED (no infra in this unit)
-  - [x] Code Generation (7/7 tests passing — awaiting approval to merge)
-- [ ] Units 2-6 — not yet started
+- **Unit 1 — Provider Abstraction & Auto-Instrumentation** — MERGED to `main`
+- **Unit 2 — Chatbot Spine** (branch: `unit/02-chatbot-spine`)
+  - [ ] Functional Design — EXECUTE (context truncation strategy, conversation lifecycle logic, message persistence timing)
+  - [ ] NFR Requirements — EXECUTE (DB access technology wasn't decided yet — deferred from project-structure.md to "each implementing unit's own decision")
+  - [ ] NFR Design — EXECUTE (follows NFR Requirements)
+  - [ ] Infrastructure Design — SKIP (real cloud infra mapping is Unit 6's job; local Postgres for dev decided as part of NFR)
+  - [ ] Code Generation
+- [ ] Units 3-6 — not yet started
 - [ ] Build and Test
 
 ### 🟡 OPERATIONS PHASE
