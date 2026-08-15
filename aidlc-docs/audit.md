@@ -361,3 +361,11 @@ Verified end-to-end, not just via pytest: ran `uv sync` (49 packages), ran the n
 **Context**: Units 1-2 complete and merged to main. Next session resumes at Unit 3.
 
 ---
+
+## Makefile Added (post-merge, on main)
+**Timestamp**: 2026-08-16T12:15:00Z
+**User Input**: "And a make file for all the doctor composed commands."
+**AI Response**: Added `Makefile` at repo root with targets: help, up (postgres only), up-all (full stack build+start), down, logs, install (uv sync), migrate (alembic upgrade head), test, test-db (real-Postgres integration tests), run (local uvicorn --reload), clean (docker-compose down -v, flagged as destructive to local dev data in its help text). Added root `.env.example` (GEMINI_API_KEY) so `docker-compose`'s automatic `.env` loading works for `make up-all`. Verified `make help`, `make test` (28 passed/5 skipped), and `make test-db` (5/5 passed against the still-running Postgres container) all work correctly from the repo root. Updated README's Getting Started section to lead with the `make` commands, keeping the raw commands as a documented equivalent underneath.
+**Context**: Small standalone addition on `main`, not tied to a specific unit's Construction gate — pure developer-experience tooling.
+
+---

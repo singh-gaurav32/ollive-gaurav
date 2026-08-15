@@ -6,41 +6,37 @@ Built incrementally via AI-DLC. See `aidlc-docs/` for the full requirements, des
 
 Requires [uv](https://docs.astral.sh/uv/), Python 3.12, and Docker (for Postgres).
 
+**Via `make`** (see `make help` for the full list):
+
 ```bash
-# 1. Start Postgres (+ pgvector)
+cp .env.example .env        # fill in GEMINI_API_KEY
+make up                     # start Postgres only
+make install                # uv sync
+make migrate                # alembic upgrade head
+make test                   # run the test suite (real-Postgres tests skipped)
+make test-db                # also run the real-Postgres integration tests
+make up-all                 # build + start the full stack (Postgres + API)
+make run                    # or run the API locally, outside Docker, with --reload
+```
+
+**Equivalent commands, without `make`:**
+
+```bash
 docker compose up -d postgres
-
-# 2. Install deps and run migrations
-cd backend
-uv sync
+cd backend && uv sync
 DATABASE_URL=postgresql+asyncpg://ollive:ollive@localhost:5432/ollive uv run alembic upgrade head
-
-# 3. Run the test suite
 uv run pytest -v
-```
-
-To also run the repository integration tests (against real Postgres, skipped by default):
-
-```bash
 RUN_DB_TESTS=1 DATABASE_URL=postgresql+asyncpg://ollive:ollive@localhost:5432/ollive uv run pytest tests/db/test_sqlalchemy_repositories.py -v
-```
 
-### Running the API
-
-```bash
-# From repo root - builds and starts both Postgres and the API
+# Full stack:
 GEMINI_API_KEY=your-key-here docker compose up -d --build
 curl http://localhost:8000/health
-```
 
-Or locally without Docker for the API itself:
-
-```bash
-cd backend
+# Or the API locally, outside Docker:
 DATABASE_URL=postgresql+asyncpg://ollive:ollive@localhost:5432/ollive GEMINI_API_KEY=your-key-here uv run uvicorn main:app --reload --app-dir src
 ```
 
-Environment variables (create `backend/.env` for local runs, not committed — see `backend/.env.example`):
+Environment variables — root `.env` (for `docker compose`, see `.env.example`) and `backend/.env` (for running `uv` commands locally, see `backend/.env.example`); neither is committed:
 
 ```
 DATABASE_URL=postgresql+asyncpg://ollive:ollive@localhost:5432/ollive
