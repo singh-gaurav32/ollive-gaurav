@@ -278,3 +278,27 @@
 **Context**: Unit 2, Functional Design stage complete.
 
 ---
+
+## Unit 2 - Functional Design Approval
+**Timestamp**: 2026-08-16T10:40:00Z
+**AI Prompt**: "Continue to Next Stage - Approve functional design and proceed to NFR Requirements?"
+**User Response**: "Continue to next stage."
+**Status**: Approved
+**Context**: Proceeding to NFR Requirements — the DB access technology decision deferred from project-structure.md.
+
+---
+
+## Unit 2 - NFR Requirements Planning
+**Timestamp**: 2026-08-16T10:45:00Z
+**AI Response**: Created `construction/plans/unit-02-chatbot-spine-nfr-requirements-plan.md` with 4 questions (DB access technology, migration tooling, local Postgres for dev given pgvector rules out SQLite, message-write latency budget). Security/Availability/Scalability/Usability marked N/A with rationale (auth is Unit 5, PII is Unit 3, Resiliency Baseline was declined, no UI in this unit).
+**Context**: Unit 2, NFR Requirements stage, planning.
+
+---
+
+## Unit 2 - NFR Requirements Answered & Artifacts Generated
+**Timestamp**: 2026-08-16T10:50:00Z
+**User Input**: "So we'll... go with SQL Alchemy 2.2 and Alymbic for... connecting the DV and the migration. For, since it requires a local post class instance, I would use a Docker compose file. I will define it right now only because we are going to use that anyway... for Messes... tenancy budget will go with option A."
+**AI Response**: Recorded Q1=A (SQLAlchemy, noted no "2.2" release exists — pinning `>=2.0` generically), Q2=A (Alembic), Q3=C/custom (docker-compose.yml started now in Unit 2 with a Postgres+pgvector service, extended by Unit 6 rather than created there), Q4=A (no hard latency SLA). No ambiguity found. Generated `nfr-requirements.md` and `tech-stack-decisions.md`. Updated `project-structure.md` to reflect docker-compose.yml now starting in Unit 2.
+**Context**: Unit 2, NFR Requirements stage complete.
+
+---

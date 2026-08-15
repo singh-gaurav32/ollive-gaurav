@@ -49,7 +49,7 @@ backend/
     provider/
     chat/ ingestion/ analytics/ auth/ api/     # populated as each unit lands
 frontend/                          # Unit 5 - not yet created
-docker-compose.yml                  # Unit 6 - not yet created
+docker-compose.yml                  # Started in Unit 2 (Postgres+pgvector service only, for local dev); Unit 6 extends it with api/worker/frontend services
 k8s/                                 # Unit 6 - not yet created
 ```
 

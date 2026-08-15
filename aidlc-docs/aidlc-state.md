@@ -39,8 +39,8 @@
 ### 🟢 CONSTRUCTION PHASE
 - **Unit 1 — Provider Abstraction & Auto-Instrumentation** — MERGED to `main`
 - **Unit 2 — Chatbot Spine** (branch: `unit/02-chatbot-spine`)
-  - [ ] Functional Design — EXECUTE (context truncation strategy, conversation lifecycle logic, message persistence timing)
-  - [ ] NFR Requirements — EXECUTE (DB access technology wasn't decided yet — deferred from project-structure.md to "each implementing unit's own decision")
+  - [x] Functional Design (conversation lifecycle, truncation Strategy, chat flow)
+  - [x] NFR Requirements (SQLAlchemy 2.0 async + asyncpg, Alembic, docker-compose.yml started now, no hard latency SLA)
   - [ ] NFR Design — EXECUTE (follows NFR Requirements)
   - [ ] Infrastructure Design — SKIP (real cloud infra mapping is Unit 6's job; local Postgres for dev decided as part of NFR)
   - [ ] Code Generation
