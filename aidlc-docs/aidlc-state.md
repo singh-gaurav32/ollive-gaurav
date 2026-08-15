@@ -43,8 +43,14 @@
   - [x] NFR Requirements (SQLAlchemy 2.0 async + asyncpg, Alembic, docker-compose.yml started now, no hard latency SLA)
   - [x] NFR Design (fail-fast startup, session-per-operation, ORM/pydantic split, Alembic env, Compose postgres service)
   - [x] Infrastructure Design — SKIP (real cloud infra mapping is Unit 6's job; local Postgres for dev decided as part of NFR)
-  - [x] Code Generation (33/33 tests passing, verified end-to-end via real Docker Compose stack — awaiting approval to merge)
+  - [x] Code Generation (33/33 tests passing, verified end-to-end via real Docker Compose stack)
+- **Unit 2 — MERGED to `main`**
 - [ ] Units 3-6 — not yet started
+
+## Session Pause Note
+Paused after Unit 2 merge, per user request ("we will start unit 3 later"). Next unit to start: **Unit 3 — Ingestion Pipeline Hardening** (branch to create: `unit/03-ingestion-pipeline`, stories US-3.1/3.2/3.3). On resume: create the branch, assess per-unit Construction stages, and note that Unit 3's `InProcessEventQueue` will replace Unit 2's temporary `NoOpEventQueue` in `api/deps.py` (one line of wiring, per the scope note recorded when `NoOpEventQueue` was added).
+
+Local Docker containers left running: `ollive-postgres-1`, `ollive-api-1` (stop with `docker-compose down` from repo root if not needed between sessions).
 - [ ] Build and Test
 
 ### 🟡 OPERATIONS PHASE

@@ -352,3 +352,12 @@ Verified end-to-end, not just via pytest: ran `uv sync` (49 packages), ran the n
 **Context**: Unit 2, Code Generation stage, Part 2 Generation complete, all plan steps marked [x].
 
 ---
+
+## Unit 2 - Merged, Session Paused Before Unit 3
+**Timestamp**: 2026-08-16T12:10:00Z
+**User Input**: "Approve and merge to Maine, but we will start unit 3 later."
+**Status**: Approved
+**AI Response**: Merged `unit/02-chatbot-spine` into `main` (--no-ff, 42 files). Unit 3 (Ingestion Pipeline Hardening) not started — session paused here per user's request. Docker containers (`ollive-postgres-1`, `ollive-api-1`) left running locally for continued manual exploration if desired.
+**Context**: Units 1-2 complete and merged to main. Next session resumes at Unit 3.
+
+---
