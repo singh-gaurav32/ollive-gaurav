@@ -302,3 +302,27 @@
 **Context**: Unit 2, NFR Requirements stage complete.
 
 ---
+
+## Unit 2 - NFR Requirements Approval
+**Timestamp**: 2026-08-16T10:55:00Z
+**AI Prompt**: "Continue to Next Stage - Approve NFR requirements and proceed to NFR Design?"
+**User Response**: "Yes, we can move ahead."
+**Status**: Approved
+**Context**: Proceeding to NFR Design.
+
+---
+
+## Unit 2 - NFR Design Planning
+**Timestamp**: 2026-08-16T11:00:00Z
+**AI Response**: Created `construction/plans/unit-02-chatbot-spine-nfr-design-plan.md` with 2 questions (DB startup resilience — retry-with-backoff vs. Compose healthcheck sequencing; DB session lifecycle — short-lived per-operation sessions vs. one session for the whole SSE request). Scalability/Performance/Security patterns decided directly (not asked) with rationale: single-process fixed already, no SLA to tune pool size against, SQLAlchemy's parameterization closes off injection by construction.
+**Context**: Unit 2, NFR Design stage, planning.
+
+---
+
+## Unit 2 - NFR Design Answered & Artifacts Generated
+**Timestamp**: 2026-08-16T11:10:00Z
+**User Input**: "We will rely on the composer's health check for now." (Q1=B); "We'll go with A. I don't want to increase the number of DB connections." (Q2=A, after asking for an explanation of what a DB session lifecycle is)
+**AI Response**: Explained DB session lifecycle in plain terms (a checked-out pool connection held for the duration of use) and the concrete tradeoff for this unit (streaming phase dominates wall-clock time but touches no DB; session-per-request would hold a connection idle for that whole time per concurrent chat). Recommended A. Recorded Q1=B (fail-fast, Compose healthcheck sequencing) and Q2=A (session-per-operation). Generated `nfr-design-patterns.md` (fail-fast startup, session-per-operation pattern explained with the connection-count rationale, default unmounted pool size, security inherited from ORM choice) and `logical-components.md` (session factory, SQLAlchemy repository implementations, ORM models kept separate from the shared pydantic contract, Alembic environment, docker-compose.yml with just the postgres service so far).
+**Context**: Unit 2, NFR Design stage complete.
+
+---

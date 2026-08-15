@@ -41,8 +41,8 @@
 - **Unit 2 — Chatbot Spine** (branch: `unit/02-chatbot-spine`)
   - [x] Functional Design (conversation lifecycle, truncation Strategy, chat flow)
   - [x] NFR Requirements (SQLAlchemy 2.0 async + asyncpg, Alembic, docker-compose.yml started now, no hard latency SLA)
-  - [ ] NFR Design — EXECUTE (follows NFR Requirements)
-  - [ ] Infrastructure Design — SKIP (real cloud infra mapping is Unit 6's job; local Postgres for dev decided as part of NFR)
+  - [x] NFR Design (fail-fast startup, session-per-operation, ORM/pydantic split, Alembic env, Compose postgres service)
+  - [x] Infrastructure Design — SKIP (real cloud infra mapping is Unit 6's job; local Postgres for dev decided as part of NFR)
   - [ ] Code Generation
 - [ ] Units 3-6 — not yet started
 - [ ] Build and Test
