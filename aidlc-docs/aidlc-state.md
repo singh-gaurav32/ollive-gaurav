@@ -38,11 +38,11 @@
 
 ### 🟢 CONSTRUCTION PHASE
 - **Unit 1 — Provider Abstraction & Auto-Instrumentation** (branch: `unit/01-provider-abstraction`)
-  - [x] Functional Design (LogEvent contract, business rules, logic model — awaiting approval)
-  - [ ] NFR Requirements — SKIPPED (no new tech/security/scalability concerns for this unit)
-  - [ ] NFR Design — SKIPPED (follows NFR Requirements)
-  - [ ] Infrastructure Design — SKIPPED (no infra in this unit)
-  - [ ] Code Generation
+  - [x] Functional Design (LogEvent contract, business rules, logic model)
+  - [x] NFR Requirements — SKIPPED (no new tech/security/scalability concerns for this unit)
+  - [x] NFR Design — SKIPPED (follows NFR Requirements)
+  - [x] Infrastructure Design — SKIPPED (no infra in this unit)
+  - [x] Code Generation (7/7 tests passing — awaiting approval to merge)
 - [ ] Units 2-6 — not yet started
 - [ ] Build and Test
 

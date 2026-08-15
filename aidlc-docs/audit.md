@@ -205,3 +205,28 @@
 **Context**: Unit 1, Functional Design stage complete.
 
 ---
+
+## Unit 1 - Functional Design Approval
+**Timestamp**: 2026-08-15T02:05:00Z
+**AI Prompt**: "Continue to Next Stage - Approve functional design and proceed to Code Generation?"
+**User Response**: "Continue to next stage."
+**Status**: Approved
+**Context**: Unit 1 Functional Design approved. NFR Requirements/Design and Infrastructure Design confirmed skipped per earlier assessment. Proceeding to Code Generation.
+
+---
+
+## Unit 1 - Code Generation Planning
+**Timestamp**: 2026-08-16T09:00:00Z
+**AI Response**: Created `construction/plans/unit-01-provider-abstraction-code-generation-plan.md`. Scoped to business-logic-only (no API/Repository/Frontend/DB/Deployment steps — all N/A for this unit, explicitly noted with rationale). Proposed tooling: Python 3.12, `uv` for env management (consistent with the alarm-clock AIDLC project precedent), `google-genai` SDK, `pytest`/`pytest-asyncio`. 4 steps: Project Structure Setup, Business Logic Generation (models/interface/event_queue/gemini_provider/instrumented_provider), Business Logic Unit Testing (test doubles + instrumented-provider + gemini-provider tests), Business Logic Summary.
+**AI Prompt**: "Review the code generation plan. Ready to proceed to generation?"
+**Context**: Unit 1, Code Generation stage, Part 1 Planning.
+
+---
+
+## Unit 1 - Code Generation Complete
+**Timestamp**: 2026-08-16T09:30:00Z
+**User Input**: "Yes, I'm ready to generate one more thing like this will be in the same branch, right?" (confirmed still on `unit/01-provider-abstraction`)
+**AI Response**: Generated all files per the approved plan: `backend/pyproject.toml`, `.python-version`, `src/provider/{models,interface,event_queue,gemini_provider,instrumented_provider,__init__}.py`, `tests/provider/{doubles,test_instrumented_provider,test_gemini_provider,__init__}.py`, `tests/__init__.py`, root `README.md` (Getting Started stub), and `aidlc-docs/construction/unit-01-provider-abstraction/code/summary.md` (documenting 3 implementation decisions made beyond the functional design: conversation_id/session_id as part of the LLMProvider interface itself, Token carrying optional per-chunk usage data, and relying on CancelledError being a BaseException subclass to keep BR5/BR8 mutually exclusive without extra branching). Ran `uv sync` (32 packages installed cleanly) and `uv run pytest -v`: 7/7 tests passed, including the cancellation-with-partial-output scenario. Verified `.venv`/`__pycache__` correctly excluded by `.gitignore`, `uv.lock` correctly tracked.
+**Context**: Unit 1, Code Generation stage, Part 2 Generation complete, all plan steps marked [x].
+
+---
