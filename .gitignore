@@ -1,0 +1,22 @@
+# AI-DLC framework files (process tooling, not part of the deliverable)
+CLAUDE.md
+.aidlc-rule-details/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# Node / frontend
+node_modules/
+dist/
+build/
+
+# Env
+.env
+.env.local
+
+# OS
+.DS_Store
