@@ -37,13 +37,14 @@
 - [x] Units Generation (6 units defined, awaiting approval)
 
 ### 🟢 CONSTRUCTION PHASE
-- **Unit 1 — Provider Abstraction & Auto-Instrumentation** (branch: `unit/01-provider-abstraction`)
-  - [x] Functional Design (LogEvent contract, business rules, logic model)
-  - [x] NFR Requirements — SKIPPED (no new tech/security/scalability concerns for this unit)
-  - [x] NFR Design — SKIPPED (follows NFR Requirements)
-  - [x] Infrastructure Design — SKIPPED (no infra in this unit)
-  - [x] Code Generation (7/7 tests passing — awaiting approval to merge)
-- [ ] Units 2-6 — not yet started
+- **Unit 1 — Provider Abstraction & Auto-Instrumentation** — MERGED to `main`
+- **Unit 2 — Chatbot Spine** (branch: `unit/02-chatbot-spine`)
+  - [x] Functional Design (conversation lifecycle, truncation Strategy, chat flow)
+  - [x] NFR Requirements (SQLAlchemy 2.0 async + asyncpg, Alembic, docker-compose.yml started now, no hard latency SLA)
+  - [x] NFR Design (fail-fast startup, session-per-operation, ORM/pydantic split, Alembic env, Compose postgres service)
+  - [x] Infrastructure Design — SKIP (real cloud infra mapping is Unit 6's job; local Postgres for dev decided as part of NFR)
+  - [x] Code Generation (33/33 tests passing, verified end-to-end via real Docker Compose stack — awaiting approval to merge)
+- [ ] Units 3-6 — not yet started
 - [ ] Build and Test
 
 ### 🟡 OPERATIONS PHASE

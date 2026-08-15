@@ -254,3 +254,101 @@
 **Context**: Unit 1, structural correction before merge. This work stays on branch `unit/01-provider-abstraction` alongside Unit 1's own code, since it was discovered during Unit 1's review and directly fixes Unit 1's output.
 
 ---
+
+## Unit 1 - Merged, Unit 2 Started
+**Timestamp**: 2026-08-16T10:20:00Z
+**User Input**: "Yes, sure, we can move to unit 2 now."
+**Status**: Approved
+**AI Response**: Merged `unit/01-provider-abstraction` into `main` (--no-ff, 48 files). Created branch `unit/02-chatbot-spine` off `main`.
+**Context**: Unit 1 complete. Starting Unit 2 (Chatbot Spine).
+
+---
+
+## Unit 2 - Functional Design Planning
+**Timestamp**: 2026-08-16T10:25:00Z
+**AI Response**: Assessed Unit 2 per-unit stages: Functional Design=EXECUTE, NFR Requirements=EXECUTE (DB tech stack decision was deliberately deferred), NFR Design=EXECUTE, Infrastructure Design=SKIP. Created `construction/plans/unit-02-chatbot-spine-functional-design-plan.md` with 5 questions: context truncation strategy, concurrent-conversation policy, message persistence timing, seed-user policy for pre-auth isolation testing, and chat-turn error handling.
+**Context**: Unit 2, Functional Design stage, planning.
+
+---
+
+## Unit 2 - Functional Design Answers & Artifacts Generated
+**Timestamp**: 2026-08-16T10:35:00Z
+**User Input**: "For our option, when we can use the strategy, design better, right? Or and for now, define an interface and use the window truncation." (Q1); Q2=A, Q3=A, Q4=A, Q5=A answered directly in file.
+**AI Response**: Recorded Q1 as Strategy pattern (ContextTruncationStrategy interface + WindowTruncationStrategy default, 10 turn-pairs), placed in chat/ (unit-owned, not shared, since only ChatService calls it - applying the ownership principle from the Unit 1 restructuring). All 5 answers analyzed: no ambiguity, no contradictions. Surfaced one implicit consequence of the combined answers: the user's message persists immediately regardless of assistant-turn outcome (Q5 only discards partial *assistant* content), and cancellation requires an in-memory task registry to reach the specific in-flight stream. Generated `construction/unit-02-chatbot-spine/functional-design/domain-entities.md` (conversation lifecycle state diagram, ContextTruncationStrategy spec, active-stream registry), `business-rules.md` (7 rules), and `business-logic-model.md` (full send_message/cancel_conversation/resume_conversation/list_conversations flows). Key invariant: every state-changing method checks ownership via ConversationRepository.get() before doing anything else.
+**Context**: Unit 2, Functional Design stage complete.
+
+---
+
+## Unit 2 - Functional Design Approval
+**Timestamp**: 2026-08-16T10:40:00Z
+**AI Prompt**: "Continue to Next Stage - Approve functional design and proceed to NFR Requirements?"
+**User Response**: "Continue to next stage."
+**Status**: Approved
+**Context**: Proceeding to NFR Requirements — the DB access technology decision deferred from project-structure.md.
+
+---
+
+## Unit 2 - NFR Requirements Planning
+**Timestamp**: 2026-08-16T10:45:00Z
+**AI Response**: Created `construction/plans/unit-02-chatbot-spine-nfr-requirements-plan.md` with 4 questions (DB access technology, migration tooling, local Postgres for dev given pgvector rules out SQLite, message-write latency budget). Security/Availability/Scalability/Usability marked N/A with rationale (auth is Unit 5, PII is Unit 3, Resiliency Baseline was declined, no UI in this unit).
+**Context**: Unit 2, NFR Requirements stage, planning.
+
+---
+
+## Unit 2 - NFR Requirements Answered & Artifacts Generated
+**Timestamp**: 2026-08-16T10:50:00Z
+**User Input**: "So we'll... go with SQL Alchemy 2.2 and Alymbic for... connecting the DV and the migration. For, since it requires a local post class instance, I would use a Docker compose file. I will define it right now only because we are going to use that anyway... for Messes... tenancy budget will go with option A."
+**AI Response**: Recorded Q1=A (SQLAlchemy, noted no "2.2" release exists — pinning `>=2.0` generically), Q2=A (Alembic), Q3=C/custom (docker-compose.yml started now in Unit 2 with a Postgres+pgvector service, extended by Unit 6 rather than created there), Q4=A (no hard latency SLA). No ambiguity found. Generated `nfr-requirements.md` and `tech-stack-decisions.md`. Updated `project-structure.md` to reflect docker-compose.yml now starting in Unit 2.
+**Context**: Unit 2, NFR Requirements stage complete.
+
+---
+
+## Unit 2 - NFR Requirements Approval
+**Timestamp**: 2026-08-16T10:55:00Z
+**AI Prompt**: "Continue to Next Stage - Approve NFR requirements and proceed to NFR Design?"
+**User Response**: "Yes, we can move ahead."
+**Status**: Approved
+**Context**: Proceeding to NFR Design.
+
+---
+
+## Unit 2 - NFR Design Planning
+**Timestamp**: 2026-08-16T11:00:00Z
+**AI Response**: Created `construction/plans/unit-02-chatbot-spine-nfr-design-plan.md` with 2 questions (DB startup resilience — retry-with-backoff vs. Compose healthcheck sequencing; DB session lifecycle — short-lived per-operation sessions vs. one session for the whole SSE request). Scalability/Performance/Security patterns decided directly (not asked) with rationale: single-process fixed already, no SLA to tune pool size against, SQLAlchemy's parameterization closes off injection by construction.
+**Context**: Unit 2, NFR Design stage, planning.
+
+---
+
+## Unit 2 - NFR Design Answered & Artifacts Generated
+**Timestamp**: 2026-08-16T11:10:00Z
+**User Input**: "We will rely on the composer's health check for now." (Q1=B); "We'll go with A. I don't want to increase the number of DB connections." (Q2=A, after asking for an explanation of what a DB session lifecycle is)
+**AI Response**: Explained DB session lifecycle in plain terms (a checked-out pool connection held for the duration of use) and the concrete tradeoff for this unit (streaming phase dominates wall-clock time but touches no DB; session-per-request would hold a connection idle for that whole time per concurrent chat). Recommended A. Recorded Q1=B (fail-fast, Compose healthcheck sequencing) and Q2=A (session-per-operation). Generated `nfr-design-patterns.md` (fail-fast startup, session-per-operation pattern explained with the connection-count rationale, default unmounted pool size, security inherited from ORM choice) and `logical-components.md` (session factory, SQLAlchemy repository implementations, ORM models kept separate from the shared pydantic contract, Alembic environment, docker-compose.yml with just the postgres service so far).
+**Context**: Unit 2, NFR Design stage complete.
+
+---
+
+## Unit 2 - NFR Design Approval
+**Timestamp**: 2026-08-16T11:15:00Z
+**AI Prompt**: "Continue to Next Stage - Approve NFR design and proceed to Code Generation?"
+**User Response**: "Proceed to code generation."
+**Status**: Approved
+**Context**: Proceeding to Code Generation, Part 1 Planning.
+
+---
+
+## Unit 2 - Code Generation Planning
+**Timestamp**: 2026-08-16T11:20:00Z
+**AI Response**: Created `construction/plans/unit-02-chatbot-spine-code-generation-plan.md`, 8 steps (project structure, business logic, business logic testing, repository layer, repository layer testing against real Postgres, API layer, API layer testing, docs). Flagged a scope note: ChatService needs InstrumentedProvider to have a real EventQueue to publish to, but InProcessEventQueue is Unit 3's deliverable — added a minimal NoOpEventQueue stand-in in events/ rather than pulling Unit 3's scope forward or bypassing InstrumentedProvider.
+**Context**: Unit 2, Code Generation stage, Part 1 Planning.
+
+---
+
+## Unit 2 - Code Generation Complete
+**Timestamp**: 2026-08-16T12:00:00Z
+**User Input**: "Yes, go ahead with the know of. And generate." (approved the plan including the NoOpEventQueue scope note)
+**AI Response**: Generated all files per the approved plan across all 8 steps: project structure (pyproject.toml deps, .env.example, Dockerfile, docker-compose.yml with postgres+api services, Alembic setup), business logic (chat/truncation.py, chat/service.py with a task+queue bridge for true out-of-band cancellation, events/noop_event_queue.py), business logic tests (chat/doubles.py, test_truncation.py, test_service.py including a deterministic event-synchronized cancellation test), repository layer (db/orm.py, db/engine.py, 3 SQLAlchemy repository implementations, initial Alembic migration), repository integration tests, API layer (api/deps.py, api/chat_router.py, main.py), API tests, and documentation (code summary, README updates). Two implementation-level additions beyond the approved functional design, both documented: ChatService.get_conversation (ownership pre-check for the API layer, since async generators don't execute until first iterated) and ConversationDetail (giving resume_conversation's already-specified return shape a concrete type).
+
+Verified end-to-end, not just via pytest: ran `uv sync` (49 packages), ran the non-DB test suite (28/28 passing), started Postgres via `docker-compose up -d postgres` (real Docker, not simulated), ran `alembic upgrade head` against it successfully, ran the real-Postgres repository tests - hit and fixed a genuine bug (async engine connection pool breaking across pytest-asyncio's per-test event loops; fixed via a fresh engine per test), reran to 5/5 passing. Built and started the full docker-compose stack (`postgres` + `api` services) via `docker-compose up -d --build`, confirmed the container runs Alembic migrations automatically then serves traffic, verified `/health` and the `/conversations` endpoints against the live container with curl, confirming real rows persisted in real Postgres. Full suite: 33/33 passing.
+**Context**: Unit 2, Code Generation stage, Part 2 Generation complete, all plan steps marked [x].
+
+---
