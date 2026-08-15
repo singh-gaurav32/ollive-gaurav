@@ -19,8 +19,20 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-# Grows as each unit adds its own top-level package under src/.
-packages = ["src/provider"]
+# Every top-level package under src/ - see
+# aidlc-docs/inception/application-design/project-structure.md for what's
+# shared (db, events) vs. unit-owned (provider, chat, ingestion, analytics,
+# auth, api). Placeholders are near-empty until their unit lands.
+packages = [
+    "src/db",
+    "src/events",
+    "src/provider",
+    "src/chat",
+    "src/ingestion",
+    "src/analytics",
+    "src/auth",
+    "src/api",
+]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

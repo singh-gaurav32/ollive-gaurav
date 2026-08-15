@@ -1,25 +1,14 @@
-"""Domain models for the provider layer: LogEvent, Message, Token.
+"""Provider-call-boundary models: Message, Token, Role.
 
-See aidlc-docs/construction/unit-01-provider-abstraction/functional-design/
-for the business rules (BR1-BR9) and domain entity spec these implement.
+LogEvent moved to events/log_event.py - it's a cross-unit contract (Unit 1
+publishes it, Unit 3 consumes it), not something owned by this unit alone.
+See aidlc-docs/inception/application-design/shared-contracts.md.
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Literal
-from uuid import UUID
 
-from pydantic import BaseModel, Field
-
-PREVIEW_MAX_CHARS = 500
-
-
-def truncate_preview(text: str, max_chars: int = PREVIEW_MAX_CHARS) -> str:
-    """BR7: previews are raw (unredacted) and truncated to a fixed length."""
-    if len(text) <= max_chars:
-        return text
-    return text[:max_chars] + "…"
+from pydantic import BaseModel
 
 
 class Role(str, Enum):
@@ -44,25 +33,3 @@ class Token(BaseModel):
     content: str
     input_tokens: int | None = None
     output_tokens: int | None = None
-
-
-LogStatus = Literal["success", "error", "cancelled"]
-
-
-class LogEvent(BaseModel):
-    """Immutable snapshot of one provider call. Per BR1-BR9 and domain-entities.md."""
-
-    model: str
-    provider: str
-    latency_ms: float
-    ttft_ms: float | None = None
-    input_tokens: int | None = None
-    output_tokens: int | None = None
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    status: LogStatus
-    error_message: str | None = None
-    conversation_id: UUID
-    session_id: UUID
-    input_preview: str
-    output_preview: str
-    extra: dict[str, Any] = Field(default_factory=dict)

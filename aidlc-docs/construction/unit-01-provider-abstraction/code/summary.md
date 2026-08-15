@@ -32,3 +32,7 @@ cd backend && uv run pytest -v
 
 - US-1.1 (pluggable provider interface) → `interface.py`, `gemini_provider.py`
 - US-1.2 (auto-instrumented logging) → `instrumented_provider.py`
+
+## Post-review restructuring
+
+Before merge, review caught that `EventQueue` (and `LogEvent`) were nested inside `provider/`, which misrepresented ownership — both are a contract between Unit 1 (producer) and Unit 3 (implementer/consumer), not something Unit 1 owns. Relocated to a new shared `events/` package, and — since the same problem would have recurred for every repository (`LogRepository` is written by Unit 3 but read directly by Unit 4; `UserRepository` is needed in stub form by Unit 2 before Unit 5 completes it) — defined a full shared `db/` package up front for every persistence contract in the system. See `aidlc-docs/inception/application-design/project-structure.md` and `shared-contracts.md`. `provider/` now contains only `Message`/`Token`/`Role`/`LLMProvider`/`ProviderResponse`/`ProviderError`/`GeminiProvider`/`InstrumentedProvider` — everything intrinsic to the provider-call boundary and nothing else. Full suite re-verified: 14/14 passing (7 original + 3 new `events/` tests + 4 new `db/` tests).

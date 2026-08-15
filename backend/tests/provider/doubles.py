@@ -5,9 +5,10 @@ import asyncio
 from collections.abc import AsyncIterator
 from uuid import UUID
 
-from provider.event_queue import EventQueue
+from events.event_queue import EventQueue
+from events.log_event import LogEvent
 from provider.interface import LLMProvider, ProviderResponse
-from provider.models import LogEvent, Message, Token
+from provider.models import Message, Token
 
 
 class FakeLLMProvider(LLMProvider):

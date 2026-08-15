@@ -2,22 +2,7 @@
 
 Six units, 1:1 with the story epics in `stories.md` (per Q3), built in the confirmed delivery sequence. All backend units run as **one Python process** (Q1) — `IngestionWorker` is a background asyncio task inside the same FastAPI app, not a separate service. The full frontend is built as **one unit, last** (Q2), covering the UI for every earlier unit's stories, not just its own.
 
-**Code organization** (per Q4):
-```
-backend/
-  src/
-    provider/     # Unit 1
-    chat/         # Unit 2
-    ingestion/    # Unit 3
-    analytics/    # Unit 4
-    auth/         # Unit 5 (backend half)
-    api/          # routers, grown incrementally across units 2-5
-  tests/
-frontend/
-  src/            # Unit 5 (entire SPA)
-docker-compose.yml  # Unit 6
-k8s/                # Unit 6
-```
+**Code organization**: superseded by `project-structure.md`, written after Unit 1 revealed that a naive one-package-per-unit split (what Q4 originally specified) misplaces anything shared *between* units — `EventQueue` and the repositories are the concrete examples. `project-structure.md` adds two shared packages (`db/`, `events/`) alongside the per-unit ones below; see `shared-contracts.md` for every interface defined in them.
 
 **Cross-cutting schema decision**: `user_id` scoping is designed into the `conversations`, `messages`, and `logs` tables starting in **Unit 2**, even though real login/session auth doesn't arrive until Unit 5. A single seeded demo user is used as a stand-in until then. This avoids a schema migration later — multi-user scoping is a day-one column, not a bolt-on.
 

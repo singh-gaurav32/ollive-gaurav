@@ -15,9 +15,11 @@ import time
 from collections.abc import AsyncIterator
 from uuid import UUID
 
-from .event_queue import EventQueue
+from events.event_queue import EventQueue
+from events.log_event import LogEvent, truncate_preview
+
 from .interface import LLMProvider, ProviderResponse
-from .models import LogEvent, Message, Token, truncate_preview
+from .models import Message, Token
 
 logger = logging.getLogger(__name__)
 

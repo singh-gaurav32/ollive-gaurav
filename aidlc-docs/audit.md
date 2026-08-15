@@ -230,3 +230,27 @@
 **Context**: Unit 1, Code Generation stage, Part 2 Generation complete, all plan steps marked [x].
 
 ---
+
+## Unit 1 Review - EventQueue Location Question
+**Timestamp**: 2026-08-16T10:00:00Z
+**User Input**: "We have to find the Q interface, but haven't any implemented any queue. Does that needs to be implemented in this unit? If not, why have we defined the interface now?"
+**AI Response**: Clarified InProcessEventQueue is correctly deferred to Unit 3; the interface exists now because InstrumentedProvider needs a real abstraction to depend on (DIP) and Unit 1's own tests need FakeEventQueue to satisfy that interface — not scope creep, since the interface has a real consumer today.
+**Context**: Unit 1, post-code-generation review, pre-merge.
+
+---
+
+## Unit 1 Review - Directory Placement Question
+**Timestamp**: 2026-08-16T10:05:00Z
+**User Input**: "No, then my question is why does the event queue is in the provider, directory?..."
+**AI Response**: Acknowledged this as a genuine gap in the Units Generation Q4 code-organization decision, which didn't account for contracts shared between units. Proposed relocating EventQueue (and LogEvent, same problem) to a new shared events/ package.
+**Context**: Unit 1, post-code-generation review, pre-merge.
+
+---
+
+## Cross-Unit Structural Redesign
+**Timestamp**: 2026-08-16T10:10:00Z
+**User Input**: "Yes, I want to... I want you to first define the interface and models for all the project... define the project structure... then define interfaces... then we will start moving on unit by unit."
+**AI Response**: Created `inception/application-design/project-structure.md` (full backend/src tree for all 6 units, with two new shared packages: db/ and events/) and `shared-contracts.md` (every cross-unit interface fully specified: EventQueue, LogEvent, User/Session/Conversation/ChatMessage/LogRecord models, UserRepository/ConversationRepository/MessageRepository/LogRepository interfaces, MetricBucket). Noted one refinement vs. the approved Application Design: AuthService.validate_session collapses UserContext into User directly. Created the db/ and events/ packages as real Python (ABCs + pydantic models, no concrete implementations - those remain each owning unit's Code Generation deliverable). Created placeholder __init__.py stubs for chat/, ingestion/, analytics/, auth/, api/ (units 2-5). Moved LogEvent/EventQueue out of provider/ into events/, updated provider/models.py, provider/__init__.py, provider/instrumented_provider.py, and tests/provider/doubles.py imports accordingly. Updated pyproject.toml's hatchling packages list to include all 8 top-level packages. Added tests/events/test_log_event.py and tests/db/test_models.py covering the new shared contracts directly. Updated unit-of-work.md to point to project-structure.md as authoritative. Re-ran uv sync + uv run pytest: 14/14 passing (7 original + 7 new).
+**Context**: Unit 1, structural correction before merge. This work stays on branch `unit/01-provider-abstraction` alongside Unit 1's own code, since it was discovered during Unit 1's review and directly fixes Unit 1's output.
+
+---
