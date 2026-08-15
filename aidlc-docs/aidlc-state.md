@@ -43,7 +43,7 @@
   - [x] NFR Requirements (SQLAlchemy 2.0 async + asyncpg, Alembic, docker-compose.yml started now, no hard latency SLA)
   - [x] NFR Design (fail-fast startup, session-per-operation, ORM/pydantic split, Alembic env, Compose postgres service)
   - [x] Infrastructure Design — SKIP (real cloud infra mapping is Unit 6's job; local Postgres for dev decided as part of NFR)
-  - [ ] Code Generation
+  - [x] Code Generation (33/33 tests passing, verified end-to-end via real Docker Compose stack — awaiting approval to merge)
 - [ ] Units 3-6 — not yet started
 - [ ] Build and Test
 

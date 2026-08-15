@@ -326,3 +326,29 @@
 **Context**: Unit 2, NFR Design stage complete.
 
 ---
+
+## Unit 2 - NFR Design Approval
+**Timestamp**: 2026-08-16T11:15:00Z
+**AI Prompt**: "Continue to Next Stage - Approve NFR design and proceed to Code Generation?"
+**User Response**: "Proceed to code generation."
+**Status**: Approved
+**Context**: Proceeding to Code Generation, Part 1 Planning.
+
+---
+
+## Unit 2 - Code Generation Planning
+**Timestamp**: 2026-08-16T11:20:00Z
+**AI Response**: Created `construction/plans/unit-02-chatbot-spine-code-generation-plan.md`, 8 steps (project structure, business logic, business logic testing, repository layer, repository layer testing against real Postgres, API layer, API layer testing, docs). Flagged a scope note: ChatService needs InstrumentedProvider to have a real EventQueue to publish to, but InProcessEventQueue is Unit 3's deliverable — added a minimal NoOpEventQueue stand-in in events/ rather than pulling Unit 3's scope forward or bypassing InstrumentedProvider.
+**Context**: Unit 2, Code Generation stage, Part 1 Planning.
+
+---
+
+## Unit 2 - Code Generation Complete
+**Timestamp**: 2026-08-16T12:00:00Z
+**User Input**: "Yes, go ahead with the know of. And generate." (approved the plan including the NoOpEventQueue scope note)
+**AI Response**: Generated all files per the approved plan across all 8 steps: project structure (pyproject.toml deps, .env.example, Dockerfile, docker-compose.yml with postgres+api services, Alembic setup), business logic (chat/truncation.py, chat/service.py with a task+queue bridge for true out-of-band cancellation, events/noop_event_queue.py), business logic tests (chat/doubles.py, test_truncation.py, test_service.py including a deterministic event-synchronized cancellation test), repository layer (db/orm.py, db/engine.py, 3 SQLAlchemy repository implementations, initial Alembic migration), repository integration tests, API layer (api/deps.py, api/chat_router.py, main.py), API tests, and documentation (code summary, README updates). Two implementation-level additions beyond the approved functional design, both documented: ChatService.get_conversation (ownership pre-check for the API layer, since async generators don't execute until first iterated) and ConversationDetail (giving resume_conversation's already-specified return shape a concrete type).
+
+Verified end-to-end, not just via pytest: ran `uv sync` (49 packages), ran the non-DB test suite (28/28 passing), started Postgres via `docker-compose up -d postgres` (real Docker, not simulated), ran `alembic upgrade head` against it successfully, ran the real-Postgres repository tests - hit and fixed a genuine bug (async engine connection pool breaking across pytest-asyncio's per-test event loops; fixed via a fresh engine per test), reran to 5/5 passing. Built and started the full docker-compose stack (`postgres` + `api` services) via `docker-compose up -d --build`, confirmed the container runs Alembic migrations automatically then serves traffic, verified `/health` and the `/conversations` endpoints against the live container with curl, confirming real rows persisted in real Postgres. Full suite: 33/33 passing.
+**Context**: Unit 2, Code Generation stage, Part 2 Generation complete, all plan steps marked [x].
+
+---
