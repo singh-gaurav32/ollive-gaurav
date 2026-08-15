@@ -37,7 +37,13 @@
 - [x] Units Generation (6 units defined, awaiting approval)
 
 ### 🟢 CONSTRUCTION PHASE
-- [ ] Per-unit design + code generation — TBD after Units Generation
+- **Unit 1 — Provider Abstraction & Auto-Instrumentation** (branch: `unit/01-provider-abstraction`)
+  - [x] Functional Design (LogEvent contract, business rules, logic model — awaiting approval)
+  - [ ] NFR Requirements — SKIPPED (no new tech/security/scalability concerns for this unit)
+  - [ ] NFR Design — SKIPPED (follows NFR Requirements)
+  - [ ] Infrastructure Design — SKIPPED (no infra in this unit)
+  - [ ] Code Generation
+- [ ] Units 2-6 — not yet started
 - [ ] Build and Test
 
 ### 🟡 OPERATIONS PHASE

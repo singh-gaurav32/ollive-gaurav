@@ -173,3 +173,35 @@
 **Context**: Units Generation stage, Part 2 Generation complete.
 
 ---
+
+## Units Generation - Final Approval
+**Timestamp**: 2026-08-15T01:45:00Z
+**AI Prompt**: "Approve & Continue - Approve units and proceed to CONSTRUCTION PHASE?"
+**User Response**: "Approve and continue."
+**Status**: Approved
+**Context**: INCEPTION PHASE complete. Proceeding to CONSTRUCTION PHASE, starting with Unit 1 (Provider Abstraction & Auto-Instrumentation).
+
+---
+
+## Unit 1 - Construction Kickoff
+**Timestamp**: 2026-08-15T01:50:00Z
+**AI Response**: Created git branch `unit/01-provider-abstraction` off `main`. Assessed per-unit Construction stages for Unit 1: Functional Design = EXECUTE (LogEvent contract, streaming latency measurement, and status/cancellation handling all need pinning down before Unit 3 depends on them), NFR Requirements/NFR Design/Infrastructure Design = SKIP (tech stack fixed, no new security/scalability/infra concerns specific to this unit). Created `construction/plans/unit-01-provider-abstraction-functional-design-plan.md` with 5 questions covering the LogEvent contract shape, streaming latency measurement, token counting source, publish-failure behavior, and cancellation status handling.
+**Context**: Unit 1, Functional Design stage, planning.
+
+---
+
+## Unit 1 - Functional Design Q4 Discussion (Dead Letter Queue)
+**Timestamp**: 2026-08-15T01:55:00Z
+**User Input**: "For option 4, do we have a dead letter cue also?"
+**AI Response**: Clarified that a DLQ doesn't apply at the publish-failure point (event never entered the queue, nothing to dead-letter) but does fit Unit 3's ingestion pipeline (a failed_log_events table for events that fail mid-pipeline after being dequeued) — flagged for Unit 3's own Functional Design rather than decided now.
+**Context**: Unit 1, Functional Design planning, in-progress question answering.
+
+---
+
+## Unit 1 - Functional Design Answers & Artifacts Generated
+**Timestamp**: 2026-08-15T02:00:00Z
+**User Input**: "A" (Question 4 = swallow + log locally)
+**AI Response**: All 5 questions answered: Q1=B (LogEvent with open `extra` dict), Q2=A (measure both ttft and total duration), Q3=A (provider's own token counts), Q4=A (swallow publish failures), Q5=A (dedicated "cancelled" status). No ambiguity found. Generated `construction/unit-01-provider-abstraction/functional-design/domain-entities.md` (LogEvent value object), `business-rules.md` (9 rules, including BR9 explicitly noting DLQ doesn't belong in this unit), and `business-logic-model.md` (send/stream logic flows, key invariant: instrumentation failures always swallowed, provider failures always propagated).
+**Context**: Unit 1, Functional Design stage complete.
+
+---
