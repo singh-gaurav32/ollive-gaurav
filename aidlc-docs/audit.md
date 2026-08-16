@@ -579,3 +579,19 @@ Found and fixed a genuine bug during real-Postgres verification: LogORM/FailedLo
 **Context**: Unit 5, NFR Requirements stage complete.
 
 ---
+
+## Unit 5 - NFR Requirements Approval
+**Timestamp**: 2026-08-16T15:20:00Z
+**AI Prompt**: "Continue to Next Stage - Approve NFR requirements and proceed to NFR Design?"
+**User Response**: "Continue to the next stage."
+**Status**: Approved
+**Context**: Proceeding to NFR Design.
+
+---
+
+## Unit 5 - NFR Design Generated (no question round needed)
+**Timestamp**: 2026-08-16T15:25:00Z
+**AI Response**: All NFR Requirements decisions were mechanical to realize. Generated nfr-design-patterns.md (CORS middleware setup, session-cookie reading pattern, Vitest/jsdom config) and logical-components.md - notably placing AuthService in backend/src/auth/ (Unit 5's own package per project-structure.md's per-unit convention, not api/), and the full frontend directory layout with colocated *.test.tsx files.
+**Context**: Unit 5, NFR Design stage complete.
+
+---
