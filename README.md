@@ -49,5 +49,6 @@ This README grows as each unit of work lands.
 
 - **Unit 1 — Provider Abstraction & Auto-Instrumentation** (done): `backend/src/provider/` — the `LLMProvider` interface, `GeminiProvider` adapter, and the `InstrumentedProvider` auto-instrumentation decorator. See `aidlc-docs/construction/unit-01-provider-abstraction/`.
 - **Unit 2 — Chatbot Spine** (done): `backend/src/chat/` (conversation lifecycle, context truncation, streaming orchestration), `backend/src/db/` (SQLAlchemy repositories + Alembic migrations), `backend/src/api/` (chat endpoints, manually verifiable — no frontend yet). `docker-compose.yml` and the `postgres`/`api` services started here. See `aidlc-docs/construction/unit-02-chatbot-spine/`.
+- **Unit 3 — Ingestion Pipeline Hardening** (done): `backend/src/events/in_process_event_queue.py` (the real event broker, replacing Unit 2's temporary no-op stand-in), `backend/src/ingestion/` (validate → extract → redact → persist pipeline, PII redaction, dead-lettering), `logs` + `failed_log_events` tables. Verified end-to-end through the live API, not just unit tests. See `aidlc-docs/construction/unit-03-ingestion-pipeline/`.
 
 More sections (architecture overview, schema design, tradeoffs, frontend setup, full deployment) will be added as later units land — the final polished README is a deliverable of its own, assembled once the system is complete.

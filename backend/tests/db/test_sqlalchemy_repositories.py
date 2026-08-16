@@ -14,6 +14,7 @@ doesn't exist.
 from __future__ import annotations
 
 import os
+from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 import pytest
@@ -58,6 +59,20 @@ def user_repo(factory):
     from db.sqlalchemy_user_repository import SqlAlchemyUserRepository
 
     return SqlAlchemyUserRepository(factory)
+
+
+@pytest.fixture
+def log_repo(factory):
+    from db.sqlalchemy_log_repository import SqlAlchemyLogRepository
+
+    return SqlAlchemyLogRepository(factory)
+
+
+@pytest.fixture
+def failed_log_repo(factory):
+    from db.sqlalchemy_failed_log_event_repository import SqlAlchemyFailedLogEventRepository
+
+    return SqlAlchemyFailedLogEventRepository(factory)
 
 
 async def test_create_and_get_conversation(user_repo, conversation_repo):
@@ -110,3 +125,54 @@ async def test_seed_user_is_idempotent(user_repo):
     second = await user_repo.get_or_create_seed_user()
 
     assert first.id == second.id
+
+
+async def test_log_insert_and_query_window_aggregates_correctly(log_repo):
+    from db.models import LogRecord
+
+    base = datetime.now(timezone.utc).replace(microsecond=0)
+    conversation_id = uuid4()
+    session_id = uuid4()
+
+    for i, (latency, status) in enumerate([(100.0, "success"), (200.0, "success"), (50.0, "error")]):
+        await log_repo.insert(
+            LogRecord(
+                model="m",
+                provider="p",
+                latency_ms=latency,
+                status=status,
+                timestamp=base + timedelta(seconds=i),
+                conversation_id=conversation_id,
+                session_id=session_id,
+                input_preview="hi",
+                output_preview="ok",
+            )
+        )
+
+    buckets = await log_repo.query_window(
+        base - timedelta(seconds=5), base + timedelta(seconds=30), bucket_size_seconds=60
+    )
+
+    matching = [b for b in buckets if b.request_count >= 3]
+    assert matching, f"expected a bucket with our 3 inserted rows, got {buckets}"
+    bucket = matching[0]
+    assert bucket.request_count == 3
+    assert bucket.error_count == 1
+    assert bucket.p50_latency_ms is not None
+    assert bucket.p95_latency_ms is not None
+
+
+async def test_failed_log_event_insert_does_not_raise(failed_log_repo):
+    from db.models import FailedLogEvent
+
+    record = FailedLogEvent(
+        model="m",
+        provider="p",
+        conversation_id=uuid4(),
+        session_id=uuid4(),
+        timestamp=datetime.now(timezone.utc),
+        failure_stage="persist",
+        failure_reason="db down",
+    )
+
+    await failed_log_repo.insert(record)

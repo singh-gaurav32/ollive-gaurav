@@ -369,3 +369,85 @@ Verified end-to-end, not just via pytest: ran `uv sync` (49 packages), ran the n
 **Context**: Small standalone addition on `main`, not tied to a specific unit's Construction gate — pure developer-experience tooling.
 
 ---
+
+## Unit 3 - Construction Kickoff
+**Timestamp**: 2026-08-16T12:20:00Z
+**User Input**: "Let's proceed further."
+**AI Response**: Created branch `unit/03-ingestion-pipeline`. Assessed per-unit stages: Functional Design=EXECUTE, NFR Requirements/Design=EXECUTE, Infrastructure Design=SKIP. Created `construction/plans/unit-03-ingestion-pipeline-functional-design-plan.md` with 5 questions: PayloadValidator's actual responsibility (given LogEvent is already pydantic-typed), MetadataExtractor's actual responsibility, PII redaction pattern/denylist mechanism, worker startup/shutdown lifecycle, and the dead-letter mechanism flagged back in Unit 1's BR9.
+**Context**: Unit 3, Functional Design stage, planning.
+
+---
+
+## Unit 3 - Functional Design Answered & Artifacts Generated
+**Timestamp**: 2026-08-16T12:30:00Z
+**User Input**: "Skip question one and two, like we don't need to validate and don't need for now anything we extract. We will do hardcotted rex plus constructor based denial list may keep it construct a pass for now, we can decide for that later. Worker, life cycle, started your faster, where lifespan? A failed log events table would be good for dead litter mechanism."
+**AI Response**: Recorded Q1/Q2 as pass-through stages (kept, not deleted, preserving Application Design's 4-stage decision), Q3=A (hardcoded regex + constructor denylist), Q4=A (FastAPI lifespan), Q5=A (failed_log_events table). Caught and resolved a real tension in Q5: dead-lettering the original event on a pre-redaction failure could write unredacted PII to durable storage, contradicting US-3.2. Resolved by having FailedLogEvent omit preview text entirely - metadata only. Generated domain-entities.md (InProcessEventQueue with put_nowait for non-blocking-under-backpressure, pipeline stage specs, FailedLogEvent/FailedLogEventRepository), business-rules.md (7 rules including the new BR-PII), and business-logic-model.md (full worker/stage logic, worker lifecycle via FastAPI lifespan, the one-line NoOpEventQueue-to-InProcessEventQueue swap anticipated back in Unit 2).
+**Context**: Unit 3, Functional Design stage complete.
+
+---
+
+## Unit 3 - Functional Design Approval
+**Timestamp**: 2026-08-16T12:35:00Z
+**AI Prompt**: "Continue to Next Stage - Approve functional design and proceed to NFR Requirements?"
+**User Response**: "Continue to next stage."
+**Status**: Approved
+**Context**: Proceeding to NFR Requirements.
+
+---
+
+## Unit 3 - NFR Requirements Planning
+**Timestamp**: 2026-08-16T12:40:00Z
+**AI Response**: Created `construction/plans/unit-03-ingestion-pipeline-nfr-requirements-plan.md` with 2 questions (worker crash recovery: let it die loudly-logged vs. auto-restart supervisor loop; logs table indexing ahead of Unit 4's dashboard queries). Tech Stack/Security/Scalability/Availability marked N/A with rationale.
+**Context**: Unit 3, NFR Requirements stage, planning.
+
+---
+
+## Unit 3 - NFR Requirements Answered & Artifacts Generated
+**Timestamp**: 2026-08-16T12:45:00Z
+**User Input**: "Let it die, loudly, loudly locked, and wait for unit 4 for indexes."
+**AI Response**: Recorded Q1=A (let it die, critical-level logging) and Q2=B (no indexes yet, deferred to Unit 4). Generated `nfr-requirements.md` and `tech-stack-decisions.md` (no new dependencies this unit — recorded explicitly rather than omitted).
+**Context**: Unit 3, NFR Requirements stage complete.
+
+---
+
+## Unit 3 - NFR Requirements Approval
+**Timestamp**: 2026-08-16T12:50:00Z
+**AI Prompt**: "Continue to Next Stage - Approve NFR requirements and proceed to NFR Design?"
+**User Response**: "continue"
+**Status**: Approved
+**Context**: Proceeding to NFR Design.
+
+---
+
+## Unit 3 - NFR Design Generated (no question round needed)
+**Timestamp**: 2026-08-16T12:55:00Z
+**AI Response**: Determined no new question round was needed - NFR Requirements' one real decision (let the worker die, log loudly) already resolved the only genuine choice; everything else was already N/A. Generated `nfr-design-patterns.md` (the technical realization: asyncio tasks don't surface exceptions automatically, so a `done_callback` checking `task.exception()` is needed to actually make failure loud and immediate rather than delayed until garbage collection) and `logical-components.md` (InProcessEventQueue, 4 pipeline stage classes, IngestionWorker, crash-visibility wiring kept in main.py's lifespan rather than inside the worker itself, db/ additions for logs and failed_log_events).
+**Context**: Unit 3, NFR Design stage complete.
+
+---
+
+## Unit 3 - NFR Design Approval
+**Timestamp**: 2026-08-16T13:00:00Z
+**AI Prompt**: "Continue to Next Stage - Approve NFR design and proceed to Code Generation?"
+**User Response**: "Continue, bro."
+**Status**: Approved
+**Context**: Proceeding to Code Generation, Part 1 Planning.
+
+---
+
+## Unit 3 - Code Generation Planning
+**Timestamp**: 2026-08-16T13:05:00Z
+**AI Response**: Created `construction/plans/unit-03-ingestion-pipeline-code-generation-plan.md`, 7 steps. Flagged that query_window (percentile_cont-based windowed aggregation) is implemented in this unit per unit-of-work.md, not deferred to Unit 4 — Unit 3 owns the logs table. Verification plan includes migrating against the live Postgres, running the extended real-DB test suite, and sending an actual chat message through the rebuilt running API to confirm an event flows through the entire system end to end for the first time, not just that the code compiles.
+**Context**: Unit 3, Code Generation stage, Part 1 Planning.
+
+---
+
+## Unit 3 - Code Generation Complete
+**Timestamp**: 2026-08-16T13:45:00Z
+**User Input**: "continue" (implicit approval to generate, following the presented plan)
+**AI Response**: Generated all files per the approved plan: InProcessEventQueue (replacing and deleting NoOpEventQueue), the 4 pipeline stage classes, IngestionWorker, db/ additions (FailedLogEvent model, LogORM/FailedLogEventORM, 2 new repository implementations including query_window's percentile_cont aggregation), migration 0002, and the deps.py/main.py wiring (shared InProcessEventQueue singleton, FastAPI lifespan managing the worker task with crash-visibility done_callback). Full test suite: 48/48 passing (41 fast + 7 real-Postgres).
+
+Found and fixed a genuine bug during real-Postgres verification: LogORM/FailedLogEventORM timestamp columns weren't declared DateTime(timezone=True) despite the migration creating them as timestamptz, causing asyncpg to reject timezone-aware Python datetimes on insert. Fixed there and proactively in every other ORM timestamp column with the same latent risk. Rebuilt the full docker-compose stack and sent an actual chat request through the live API - it genuinely failed against the real Gemini API (no valid key available in this environment) - and traced that failure through the entire real system (InstrumentedProvider -> real InProcessEventQueue -> real IngestionWorker -> pipeline -> a real row in `logs`, confirmed via direct psql query with the actual Gemini error message). First true end-to-end pass through the whole system, not simulated.
+**Context**: Unit 3, Code Generation stage, Part 2 Generation complete, all plan steps marked [x].
+
+---
