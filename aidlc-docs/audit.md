@@ -531,3 +531,27 @@ Found and fixed a genuine bug during real-Postgres verification: LogORM/FailedLo
 **Context**: Unit 4, Code Generation stage, Part 2 Generation complete, all plan steps marked [x].
 
 ---
+
+## Unit 4 - Merged, Unit 5 Started
+**Timestamp**: 2026-08-16T14:45:00Z
+**User Input**: "Move to next stage."
+**Status**: Approved
+**AI Response**: Merged `unit/04-observability-dashboard` into `main` (--no-ff). Created branch `unit/05-frontend-auth`. This is the largest remaining unit: the entire React SPA (chat, dashboard, conversation list/resume/cancel, login) plus real AuthService/session auth replacing Unit 2's seeded-user stub.
+**Context**: Unit 4 complete. Starting Unit 5 (Frontend Application + Auth/Isolation).
+
+---
+
+## Unit 5 - Functional Design Planning
+**Timestamp**: 2026-08-16T14:50:00Z
+**AI Response**: Assessed stages: Functional Design=EXECUTE, NFR Requirements=EXECUTE (frontend tooling choices), Infrastructure Design=SKIP. Created `construction/plans/unit-05-frontend-auth-functional-design-plan.md` with 3 questions (demo login mechanism, frontend route structure/tooling, cancel-during-streaming interaction) plus a decided-directly technical note that the chat streaming endpoint requires fetch+ReadableStream rather than native EventSource since it's a POST with a body.
+**Context**: Unit 5, Functional Design stage, planning.
+
+---
+
+## Unit 5 - Functional Design Answered & Artifacts Generated
+**Timestamp**: 2026-08-16T15:00:00Z
+**User Input**: "A, A, A."
+**AI Response**: Recorded all 3 as A (pick-a-user login, Vite/React/TS/Tailwind/TanStack Query, abort-own-stream-on-cancel). Generated domain-entities.md (AuthService completion, UserRepository additions - list_users/delete_session, demo user seeding, session cookie mechanics, AuthContext, frontend routes, and the session_id placeholder retirement), business-rules.md (8 rules), business-logic-model.md (login/session-validation/logout flows, chat streaming fetch+ReadableStream loop, cancel interaction, auth-aware routing), and frontend-components.md (component hierarchy, page state/interactions, API integration table). Key finding: Unit 2's user.id-as-session_id placeholder gets properly retired here - chat_router.py will pass the real session.id once real auth exists.
+**Context**: Unit 5, Functional Design stage complete.
+
+---
