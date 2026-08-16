@@ -555,3 +555,27 @@ Found and fixed a genuine bug during real-Postgres verification: LogORM/FailedLo
 **Context**: Unit 5, Functional Design stage complete.
 
 ---
+
+## Unit 5 - Functional Design Approval
+**Timestamp**: 2026-08-16T15:05:00Z
+**AI Prompt**: "Continue to Next Stage - Approve functional design and proceed to NFR Requirements?"
+**User Response**: "Continue."
+**Status**: Approved
+**Context**: Proceeding to NFR Requirements.
+
+---
+
+## Unit 5 - NFR Requirements Planning
+**Timestamp**: 2026-08-16T15:10:00Z
+**AI Response**: Created `construction/plans/unit-05-frontend-auth-nfr-requirements-plan.md` with 3 questions: dev-time frontend-backend connectivity (Vite proxy vs CORS), TypeScript type source (manual vs generated from OpenAPI), and whether to write automated frontend tests given the project's already-large scope.
+**Context**: Unit 5, NFR Requirements stage, planning.
+
+---
+
+## Unit 5 - NFR Requirements Answered & Artifacts Generated
+**Timestamp**: 2026-08-16T15:15:00Z
+**User Input**: "For question number one, go whatever is more portable to the product or when I'm going to deploy this, and for the front end types, go with the manual return hard mirror. I want to do actually do the white test react testing library."
+**AI Response**: Recorded Q1=B (CORS middleware, portable across deployment topologies, allowed origins via ALLOWED_ORIGINS env var so Unit 6 configures it without a code change), Q2=A (manually hand-mirrored TS types), Q3=A (Vitest + React Testing Library). Generated nfr-requirements.md and tech-stack-decisions.md.
+**Context**: Unit 5, NFR Requirements stage complete.
+
+---
