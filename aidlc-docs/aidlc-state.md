@@ -50,8 +50,8 @@
 ## Unit 3 — Ingestion Pipeline Hardening (branch: `unit/03-ingestion-pipeline`)
 - [x] Functional Design (pipeline stages, redaction, worker lifecycle, dead-letter mechanism with PII-safe design)
 - [x] NFR Requirements (let worker die loudly on unexpected crash, no logs indexes yet — deferred to Unit 4)
-- [ ] NFR Design — TBD
-- [ ] Infrastructure Design — SKIP (no infra changes this unit)
+- [x] NFR Design (asyncio task done_callback for crash visibility, component layout)
+- [x] Infrastructure Design — SKIP (no infra changes this unit)
 - [ ] Code Generation
 - [ ] Build and Test
 

@@ -409,3 +409,19 @@ Verified end-to-end, not just via pytest: ran `uv sync` (49 packages), ran the n
 **Context**: Unit 3, NFR Requirements stage complete.
 
 ---
+
+## Unit 3 - NFR Requirements Approval
+**Timestamp**: 2026-08-16T12:50:00Z
+**AI Prompt**: "Continue to Next Stage - Approve NFR requirements and proceed to NFR Design?"
+**User Response**: "continue"
+**Status**: Approved
+**Context**: Proceeding to NFR Design.
+
+---
+
+## Unit 3 - NFR Design Generated (no question round needed)
+**Timestamp**: 2026-08-16T12:55:00Z
+**AI Response**: Determined no new question round was needed - NFR Requirements' one real decision (let the worker die, log loudly) already resolved the only genuine choice; everything else was already N/A. Generated `nfr-design-patterns.md` (the technical realization: asyncio tasks don't surface exceptions automatically, so a `done_callback` checking `task.exception()` is needed to actually make failure loud and immediate rather than delayed until garbage collection) and `logical-components.md` (InProcessEventQueue, 4 pipeline stage classes, IngestionWorker, crash-visibility wiring kept in main.py's lifespan rather than inside the worker itself, db/ additions for logs and failed_log_events).
+**Context**: Unit 3, NFR Design stage complete.
+
+---
