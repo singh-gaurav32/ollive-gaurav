@@ -1,0 +1,28 @@
+# All traffic enters through the frontend Service - its nginx.conf (same image
+# used by docker-compose) already proxies /auth, /conversations, /metrics, /health
+# to the api Service internally, so there's no need to duplicate that routing here.
+# Replace YOUR-SUBDOMAIN.duckdns.org with the real DuckDNS hostname before applying.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ollive-ingress
+  namespace: ollive
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - YOUR-SUBDOMAIN.duckdns.org
+      secretName: ollive-tls
+  rules:
+    - host: YOUR-SUBDOMAIN.duckdns.org
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80
