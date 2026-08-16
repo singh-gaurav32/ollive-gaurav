@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Explicit background/text color - without this, an empty page inherits
+   whatever the browser's default color scheme is (e.g. black-on-black
+   under a dark OS/browser preference), since Tailwind's preflight reset
+   doesn't set one itself. */
+html,
+body {
+  @apply bg-white text-gray-900;
+}

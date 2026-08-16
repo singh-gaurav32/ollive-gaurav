@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from analytics.service import AnalyticsService
 
-from .deps import get_analytics_service
+from .deps import AuthContext, get_analytics_service, get_auth_context
 
 router = APIRouter(tags=["dashboard"])
 
@@ -25,6 +25,7 @@ async def get_metrics(
     start: datetime | None = None,
     end: datetime | None = None,
     bucket_size_seconds: int = DEFAULT_BUCKET_SIZE_SECONDS,
+    auth: AuthContext = Depends(get_auth_context),  # BR3: same session auth as everything else
     analytics_service: AnalyticsService = Depends(get_analytics_service),
 ):
     end_time = end or datetime.now(timezone.utc)

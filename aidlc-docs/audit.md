@@ -531,3 +531,94 @@ Found and fixed a genuine bug during real-Postgres verification: LogORM/FailedLo
 **Context**: Unit 4, Code Generation stage, Part 2 Generation complete, all plan steps marked [x].
 
 ---
+
+## Unit 4 - Merged, Unit 5 Started
+**Timestamp**: 2026-08-16T14:45:00Z
+**User Input**: "Move to next stage."
+**Status**: Approved
+**AI Response**: Merged `unit/04-observability-dashboard` into `main` (--no-ff). Created branch `unit/05-frontend-auth`. This is the largest remaining unit: the entire React SPA (chat, dashboard, conversation list/resume/cancel, login) plus real AuthService/session auth replacing Unit 2's seeded-user stub.
+**Context**: Unit 4 complete. Starting Unit 5 (Frontend Application + Auth/Isolation).
+
+---
+
+## Unit 5 - Functional Design Planning
+**Timestamp**: 2026-08-16T14:50:00Z
+**AI Response**: Assessed stages: Functional Design=EXECUTE, NFR Requirements=EXECUTE (frontend tooling choices), Infrastructure Design=SKIP. Created `construction/plans/unit-05-frontend-auth-functional-design-plan.md` with 3 questions (demo login mechanism, frontend route structure/tooling, cancel-during-streaming interaction) plus a decided-directly technical note that the chat streaming endpoint requires fetch+ReadableStream rather than native EventSource since it's a POST with a body.
+**Context**: Unit 5, Functional Design stage, planning.
+
+---
+
+## Unit 5 - Functional Design Answered & Artifacts Generated
+**Timestamp**: 2026-08-16T15:00:00Z
+**User Input**: "A, A, A."
+**AI Response**: Recorded all 3 as A (pick-a-user login, Vite/React/TS/Tailwind/TanStack Query, abort-own-stream-on-cancel). Generated domain-entities.md (AuthService completion, UserRepository additions - list_users/delete_session, demo user seeding, session cookie mechanics, AuthContext, frontend routes, and the session_id placeholder retirement), business-rules.md (8 rules), business-logic-model.md (login/session-validation/logout flows, chat streaming fetch+ReadableStream loop, cancel interaction, auth-aware routing), and frontend-components.md (component hierarchy, page state/interactions, API integration table). Key finding: Unit 2's user.id-as-session_id placeholder gets properly retired here - chat_router.py will pass the real session.id once real auth exists.
+**Context**: Unit 5, Functional Design stage complete.
+
+---
+
+## Unit 5 - Functional Design Approval
+**Timestamp**: 2026-08-16T15:05:00Z
+**AI Prompt**: "Continue to Next Stage - Approve functional design and proceed to NFR Requirements?"
+**User Response**: "Continue."
+**Status**: Approved
+**Context**: Proceeding to NFR Requirements.
+
+---
+
+## Unit 5 - NFR Requirements Planning
+**Timestamp**: 2026-08-16T15:10:00Z
+**AI Response**: Created `construction/plans/unit-05-frontend-auth-nfr-requirements-plan.md` with 3 questions: dev-time frontend-backend connectivity (Vite proxy vs CORS), TypeScript type source (manual vs generated from OpenAPI), and whether to write automated frontend tests given the project's already-large scope.
+**Context**: Unit 5, NFR Requirements stage, planning.
+
+---
+
+## Unit 5 - NFR Requirements Answered & Artifacts Generated
+**Timestamp**: 2026-08-16T15:15:00Z
+**User Input**: "For question number one, go whatever is more portable to the product or when I'm going to deploy this, and for the front end types, go with the manual return hard mirror. I want to do actually do the white test react testing library."
+**AI Response**: Recorded Q1=B (CORS middleware, portable across deployment topologies, allowed origins via ALLOWED_ORIGINS env var so Unit 6 configures it without a code change), Q2=A (manually hand-mirrored TS types), Q3=A (Vitest + React Testing Library). Generated nfr-requirements.md and tech-stack-decisions.md.
+**Context**: Unit 5, NFR Requirements stage complete.
+
+---
+
+## Unit 5 - NFR Requirements Approval
+**Timestamp**: 2026-08-16T15:20:00Z
+**AI Prompt**: "Continue to Next Stage - Approve NFR requirements and proceed to NFR Design?"
+**User Response**: "Continue to the next stage."
+**Status**: Approved
+**Context**: Proceeding to NFR Design.
+
+---
+
+## Unit 5 - NFR Design Generated (no question round needed)
+**Timestamp**: 2026-08-16T15:25:00Z
+**AI Response**: All NFR Requirements decisions were mechanical to realize. Generated nfr-design-patterns.md (CORS middleware setup, session-cookie reading pattern, Vitest/jsdom config) and logical-components.md - notably placing AuthService in backend/src/auth/ (Unit 5's own package per project-structure.md's per-unit convention, not api/), and the full frontend directory layout with colocated *.test.tsx files.
+**Context**: Unit 5, NFR Design stage complete.
+
+---
+
+## Unit 5 - NFR Design Approval
+**Timestamp**: 2026-08-16T15:30:00Z
+**AI Prompt**: "Continue to Next Stage - Approve NFR design and proceed to Code Generation?"
+**User Response**: "Continue to go generation. Code generation."
+**Status**: Approved
+**Context**: Proceeding to Code Generation, Part 1 Planning — the largest unit yet (backend auth + entire frontend SPA).
+
+---
+
+## Unit 5 - Code Generation Planning
+**Timestamp**: 2026-08-16T15:35:00Z
+**AI Response**: Created `construction/plans/unit-05-frontend-auth-code-generation-plan.md`, 6 steps spanning backend auth (AuthService, auth_router, the session_id fix in chat_router), backend auth tests, frontend project setup, frontend API/auth layer, frontend pages/components, and docs. Verification plan explicitly includes live in-browser testing (login, send message, cancel mid-stream, resume, dashboard) via the Browser tool, not just code review.
+**Context**: Unit 5, Code Generation stage, Part 1 Planning.
+
+---
+
+## Unit 5 - Code Generation Complete
+**Timestamp**: 2026-08-16T16:45:00Z
+**AI Response**: Generated the full backend auth layer (AuthService in its own auth/ package, UserRepository extensions, auth_router, AuthContext/get_auth_context replacing get_current_user everywhere including the session_id fix in chat_router) and the full frontend SPA (Vite/React/TS/Tailwind/TanStack Query - login, chat with streaming/cancel, conversation list/resume, dashboard). Caught and fixed a copy-paste replace_all accident mid-generation (mangled sqlalchemy_user_repository import). Wrote and ran the new auth tests, including catching and fixing a test double bug (constructing a fresh fake per dependency resolution, making a would-be-passing test a false positive).
+
+Backend: 57/57 fast + 8/8 real-Postgres passing. Frontend: 9/9 Vitest passing, clean tsc.
+
+Then performed genuine live browser verification (not simulated): started the Vite dev server via the Browser tool, rebuilt the backend container, and found + fixed 4 real bugs that only surfaced by actually clicking through the app - relative API_BASE hitting Vite's own dev server instead of the backend (masked as a silent empty response due to SPA fallback), an unstyled black background, "new conversation" not navigating into the created conversation, and a 401-redirect-loop risk in AuthContext's own initial auth check. After fixes: verified login persistence, a real chat send with graceful failure handling (no valid Gemini key in this environment), real aggregated dashboard data, conversation resume with full history, and - critically - multi-user isolation verified two ways (bob sees zero conversations, and a direct URL guess at alice's conversation returns a genuine 404 from the backend, not a UI-level hide).
+**Context**: Unit 5, Code Generation stage, Part 2 Generation complete, all plan steps marked [x].
+
+---

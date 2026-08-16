@@ -43,6 +43,22 @@ DATABASE_URL=postgresql+asyncpg://ollive:ollive@localhost:5432/ollive
 GEMINI_API_KEY=your-key-here
 ```
 
+## Getting Started (Frontend)
+
+Requires Node 20+.
+
+```bash
+cd frontend
+cp .env.example .env    # VITE_API_BASE_URL, defaults to http://localhost:8000
+npm install
+npm run dev              # http://localhost:5173
+npm run test              # Vitest + React Testing Library
+```
+
+The backend must be running (see above) with `ALLOWED_ORIGINS` including `http://localhost:5173` (the default) for the frontend to reach it — CORS, not a dev proxy, is used (see `aidlc-docs/construction/unit-05-frontend-auth/nfr-requirements/`).
+
+On first run, log in as one of the seeded demo users (`alice`, `bob`, `carol`) — no password.
+
 ## Status
 
 This README grows as each unit of work lands.
@@ -51,5 +67,6 @@ This README grows as each unit of work lands.
 - **Unit 2 — Chatbot Spine** (done): `backend/src/chat/` (conversation lifecycle, context truncation, streaming orchestration), `backend/src/db/` (SQLAlchemy repositories + Alembic migrations), `backend/src/api/` (chat endpoints, manually verifiable — no frontend yet). `docker-compose.yml` and the `postgres`/`api` services started here. See `aidlc-docs/construction/unit-02-chatbot-spine/`.
 - **Unit 3 — Ingestion Pipeline Hardening** (done): `backend/src/events/in_process_event_queue.py` (the real event broker, replacing Unit 2's temporary no-op stand-in), `backend/src/ingestion/` (validate → extract → redact → persist pipeline, PII redaction, dead-lettering), `logs` + `failed_log_events` tables. Verified end-to-end through the live API, not just unit tests. See `aidlc-docs/construction/unit-03-ingestion-pipeline/`.
 - **Unit 4 — Observability Dashboard** (done): `GET /metrics` — latency (p50/p95), throughput, and error-rate buckets over `logs`, with sensible defaults and a cap against runaway queries. Backend only — the dashboard UI is Unit 5. See `aidlc-docs/construction/unit-04-observability-dashboard/`.
+- **Unit 5 — Frontend Application + Auth/Isolation** (done): the full React SPA (login, chat with streaming/cancel, conversation list/resume, dashboard), plus real session-based auth (`backend/src/auth/`) replacing Unit 2's seeded-user stub. Multi-user isolation verified live: a second user sees zero conversations, and direct-URL access to another user's conversation returns a real `404` from the backend, not a UI-level hide. See `aidlc-docs/construction/unit-05-frontend-auth/`.
 
-More sections (architecture overview, schema design, tradeoffs, frontend setup, full deployment) will be added as later units land — the final polished README is a deliverable of its own, assembled once the system is complete.
+More sections (architecture overview, schema design, tradeoffs, full deployment) will be added as later units land — the final polished README is a deliverable of its own, assembled once the system is complete.

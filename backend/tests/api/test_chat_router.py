@@ -3,9 +3,12 @@ no real DB, no real Gemini. Exercises routing, request/response shapes,
 and that ownership checks apply at the HTTP layer too."""
 from __future__ import annotations
 
+from uuid import uuid4
+
 from fastapi.testclient import TestClient
 
 from api import deps
+from api.deps import AuthContext
 from chat.service import ChatService
 from chat.truncation import WindowTruncationStrategy
 from db.models import User
@@ -26,7 +29,7 @@ def _override_app(fake_provider: FakeLLMProvider, user: User) -> None:
         truncation_strategy=WindowTruncationStrategy(),
     )
     app.dependency_overrides[deps.get_chat_service] = lambda: service
-    app.dependency_overrides[deps.get_current_user] = lambda: user
+    app.dependency_overrides[deps.get_auth_context] = lambda: AuthContext(user=user, session_id=uuid4())
 
 
 def test_start_list_and_resume_conversation():
@@ -52,7 +55,9 @@ def test_actions_on_another_users_conversation_return_404():
     client = TestClient(app)
     conversation_id = client.post("/conversations").json()["id"]
 
-    app.dependency_overrides[deps.get_current_user] = lambda: User(username="other")
+    app.dependency_overrides[deps.get_auth_context] = lambda: AuthContext(
+        user=User(username="other"), session_id=uuid4()
+    )
 
     resp = client.post(f"/conversations/{conversation_id}/cancel")
 
