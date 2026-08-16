@@ -10,7 +10,13 @@ Keeps the frontend an independently deployable/restartable unit with its own Dep
 
 ## No container registry — build directly on the VM
 
+**Superseded during actual provisioning** (see `aidlc-docs/operations/oracle-vm-provisioning-checklist.md`, step H) — switched to **GHCR**. The original reasoning held for the theoretical single-node case, but in practice: Docker was already working locally (used throughout Unit 6's own verification), and a GitHub repo was already being set up for this deployment anyway, so GHCR added no new account/setup — it removed the need to install Docker on the VM at all, and turned every future update from "SSH in, rebuild, re-import into containerd" into "rebuild locally, push, `kubectl rollout restart`". `k8s/api-deployment.yaml` and `k8s/frontend-deployment.yaml` now reference `ghcr.io/singh-gaurav32/ollive-{api,frontend}:latest` with `imagePullPolicy: Always`, not `imagePullPolicy: Never` against a locally-built image.
+
+<details><summary>Original reasoning (superseded)</summary>
+
 For a single-node cluster there's no second node that needs to *pull* an image from anywhere; a registry (ghcr.io/Docker Hub) would add an account, auth, and a push/pull round-trip for zero benefit at this scale. Images are built on the VM itself and loaded into k3s's local `containerd` store (`k3s ctr images import` or an equivalent local-build flow).
+
+</details>
 
 ## DuckDNS over nip.io
 

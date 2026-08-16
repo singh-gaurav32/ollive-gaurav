@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
         - name: api
-          image: ollive-api:latest
-          imagePullPolicy: Never
+          image: ghcr.io/singh-gaurav32/ollive-api:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8000
           envFrom:

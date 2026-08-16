@@ -80,19 +80,23 @@ OCI Console → **Networking → Virtual Cloud Networks** → your VCN → **Sec
 
 ---
 
-## H. Get the code onto the VM and build images
+## H. Build and push images — revised mid-deployment: GHCR instead of build-on-VM
 
-- [ ] Install git/docker on the VM if not already present (Ubuntu 22.04 cloud images usually need `sudo apt update && sudo apt install -y git docker.io` and `sudo usermod -aG docker ubuntu` — logout/login after the `usermod`)
-- [ ] Clone the repo: `git clone <your-repo-url> && cd ollive`
-- [ ] Build the images:
+**Decision change from NFR Requirements' original "no registry, build on VM"**: since Docker already works locally and a GitHub repo (`github.com/singh-gaurav32/ollive-gaurav`) is already in play, pushing to **GHCR (GitHub Container Registry)** is now simpler than installing Docker on the VM and manually re-building/re-importing on every update. The VM only needs k3s/containerd (already there) — no Docker install on the VM at all. `k8s/api-deployment.yaml` and `k8s/frontend-deployment.yaml` updated to `image: ghcr.io/singh-gaurav32/ollive-api:latest` / `ollive-frontend:latest`, `imagePullPolicy: Always` (was `Never`).
+
+- [ ] Generate a GitHub PAT (`write:packages` scope) and run `docker login ghcr.io` **in your own terminal** (kept out of this conversation on purpose)
+- [ ] Build and push, from the local repo (not the VM):
   ```bash
-  docker build -t ollive-api:latest ./backend
-  docker build -t ollive-frontend:latest --build-arg VITE_API_BASE_URL="" ./frontend
+  docker build -t ghcr.io/singh-gaurav32/ollive-api:latest ./backend
+  docker push ghcr.io/singh-gaurav32/ollive-api:latest
+  docker build -t ghcr.io/singh-gaurav32/ollive-frontend:latest --build-arg VITE_API_BASE_URL="" ./frontend
+  docker push ghcr.io/singh-gaurav32/ollive-frontend:latest
   ```
-- [ ] Import into k3s's containerd (separate store from Docker's):
+- [ ] **First push only**: GHCR packages default to **private** even from a public repo — go to your GitHub profile → **Packages** → select `ollive-api` (and `ollive-frontend`) → **Package settings → Danger Zone → Change visibility → Public** (needed so the VM can pull without an `imagePullSecret`; confirm this is acceptable — no secrets are baked into the image, those come in via the k8s `Secret`, but the image contents/code become publicly downloadable)
+- [ ] On the VM: just clone the repo for the `k8s/` manifests and README — no build needed there:
   ```bash
-  docker save ollive-api:latest | sudo k3s ctr images import -
-  docker save ollive-frontend:latest | sudo k3s ctr images import -
+  sudo apt update && sudo apt install -y git
+  git clone https://github.com/singh-gaurav32/ollive-gaurav.git && cd ollive-gaurav
   ```
 
 ---

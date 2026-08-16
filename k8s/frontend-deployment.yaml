@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: ollive-frontend:latest
-          imagePullPolicy: Never
+          image: ghcr.io/singh-gaurav32/ollive-frontend:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
           readinessProbe:

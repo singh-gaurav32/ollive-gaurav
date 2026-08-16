@@ -98,19 +98,25 @@ sudo k3s kubectl apply -f https://github.com/cert-manager/cert-manager/releases/
 sudo k3s kubectl -n cert-manager rollout status deploy/cert-manager
 ```
 
-**7. Clone the repo onto the VM and build the images locally** (no registry is used — see `aidlc-docs/construction/unit-06-packaging-deployment/nfr-requirements/`):
+**7. Build and push the images to a registry** (GHCR — GitHub Container Registry — recommended over building on the VM: no Docker install needed there, and updates become rebuild-and-push instead of SSH-and-rebuild; see `aidlc-docs/operations/oracle-vm-provisioning-checklist.md` for the full rationale):
 ```bash
-docker build -t ollive-api:latest ./backend
-docker build -t ollive-frontend:latest --build-arg VITE_API_BASE_URL="" ./frontend
-# k3s's containerd is separate from Docker's local image store:
-docker save ollive-api:latest | sudo k3s ctr images import -
-docker save ollive-frontend:latest | sudo k3s ctr images import -
+docker login ghcr.io -u <your-github-username>   # run this yourself, don't paste tokens into a shared session
+docker build -t ghcr.io/<your-github-username>/ollive-api:latest ./backend
+docker push ghcr.io/<your-github-username>/ollive-api:latest
+docker build -t ghcr.io/<your-github-username>/ollive-frontend:latest --build-arg VITE_API_BASE_URL="" ./frontend
+docker push ghcr.io/<your-github-username>/ollive-frontend:latest
+```
+First push only: GHCR packages default to private — go to your GitHub profile → **Packages** → each package → **Package settings → Change visibility → Public**, so the VM can pull without an `imagePullSecret`. Then, on the VM, just clone the repo (no build needed there):
+```bash
+git clone <your-repo-url> && cd ollive-gaurav
 ```
 
-**8. Fill in secrets and the hostname**:
+**8. Fill in secrets and confirm the hostname/registry references**:
 ```bash
 cp k8s/secrets.yaml.example k8s/secrets.yaml   # edit with real values, this file is git-ignored
-# edit k8s/ingress.yaml and k8s/cluster-issuer.yaml: replace YOUR-SUBDOMAIN.duckdns.org / your-email@example.com
+# k8s/ingress.yaml, k8s/cluster-issuer.yaml, and the image: fields in k8s/api-deployment.yaml /
+# k8s/frontend-deployment.yaml already point at the real hostname/registry if you're using this repo as-is;
+# double-check they match your own GHCR username/DuckDNS host if you forked/renamed anything
 ```
 
 **9. Apply the manifests**:
