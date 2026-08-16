@@ -41,13 +41,8 @@
 - **Unit 2 — Chatbot Spine** — MERGED to `main` (33/33 tests, verified end-to-end via real Docker Compose stack)
 - **Unit 3 — Ingestion Pipeline Hardening** — MERGED to `main` (48/48 tests, verified end-to-end through the live API with a real Gemini error flowing all the way to a `logs` row)
 - **Unit 4 — Observability Dashboard** — MERGED to `main` (53/53 tests, verified end-to-end against the live API including the bucket-count cap)
-- **Unit 5 — Frontend Application + Auth/Isolation** (branch: `unit/05-frontend-auth`)
-  - [x] Functional Design (auth flow, frontend architecture, session_id placeholder retirement)
-  - [x] NFR Requirements (CORS, manual TS types, Vitest+RTL)
-  - [x] NFR Design (CORS setup, AuthContext dependency, frontend layout)
-  - [x] Infrastructure Design — SKIP (no infra changes this unit)
-  - [x] Code Generation (74 automated tests passing across backend+frontend, 4 real bugs found and fixed via live browser verification, multi-user isolation verified two ways — awaiting approval to merge)
-- [ ] Unit 6 (Packaging & Deployment) — not yet started
+- **Unit 5 — Frontend Application + Auth/Isolation** — MERGED to `main` (74 automated tests, 4 real bugs found and fixed via live browser verification, multi-user isolation verified two ways)
+- [ ] Unit 6 (Packaging & Deployment) — not yet started, final unit
 - [ ] Build and Test (after all units complete)
 
 ### 🟡 OPERATIONS PHASE
@@ -55,6 +50,6 @@
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION
-- **Current Stage**: Unit 5 (Frontend Application + Auth/Isolation) — Code Generation complete, awaiting merge approval
-- **Next Stage**: Merge Unit 5, then Unit 6 (Packaging & Deployment) — the final unit
-- **Status**: In progress
+- **Current Stage**: Units 1-5 complete and merged to `main`
+- **Next Stage**: Unit 6 (Packaging & Deployment — Docker Compose extended with worker/frontend services, k8s manifests) — the last unit before Build and Test
+- **Status**: Awaiting direction to start Unit 6
