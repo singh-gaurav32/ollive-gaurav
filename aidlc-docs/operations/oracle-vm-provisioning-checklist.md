@@ -67,37 +67,30 @@ OCI Console → **Networking → Virtual Cloud Networks** → your VCN → **Sec
 ## F. SSH in, install k3s
 
 - [x] `ssh -i ~/.ssh/ollive_oracle_ed25519 ubuntu@144.24.101.70` — confirmed working (used earlier to check instance metadata)
-- [ ] Install k3s: `curl -sfL https://get.k3s.io | sh -`
-- [ ] Confirm it's running: `sudo k3s kubectl get nodes` (should show one `Ready` node)
-- [ ] This also installs **Traefik** (ingress) and the **local-path** storage class — no separate install needed for either
+- [x] Installed k3s `v1.36.3+k3s1` — note: this step was initially skipped by mistake (jumped straight to image building after DuckDNS), caught when applying manifests failed with `k3s: command not found`; installed at that point instead
+- [x] Confirmed: `sudo k3s kubectl get nodes` → one node, `Ready`, control-plane
+- [x] Traefik + local-path storage class present by default, no separate install needed
 
 ---
 
-## G. Install cert-manager
+## G. Install cert-manager — done
 
-- [ ] `sudo k3s kubectl apply -f https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.yaml`
-- [ ] Wait for it: `sudo k3s kubectl -n cert-manager rollout status deploy/cert-manager`
+- [x] Applied `cert-manager.yaml`
+- [x] `rollout status deploy/cert-manager` → successfully rolled out
 
 ---
 
-## H. Build and push images — revised mid-deployment: GHCR instead of build-on-VM
+## H. Build and push images — done, with a further deviation: built ON the VM after all
 
-**Decision change from NFR Requirements' original "no registry, build on VM"**: since Docker already works locally and a GitHub repo (`github.com/singh-gaurav32/ollive-gaurav`) is already in play, pushing to **GHCR (GitHub Container Registry)** is now simpler than installing Docker on the VM and manually re-building/re-importing on every update. The VM only needs k3s/containerd (already there) — no Docker install on the VM at all. `k8s/api-deployment.yaml` and `k8s/frontend-deployment.yaml` updated to `image: ghcr.io/singh-gaurav32/ollive-api:latest` / `ollive-frontend:latest`, `imagePullPolicy: Always` (was `Never`).
+**Decision change #1** (from NFR Requirements' original "no registry, build on VM"): switched to **GHCR**, reasoning as originally noted below.
 
-- [ ] Generate a GitHub PAT (`write:packages` scope) and run `docker login ghcr.io` **in your own terminal** (kept out of this conversation on purpose)
-- [ ] Build and push, from the local repo (not the VM):
-  ```bash
-  docker build -t ghcr.io/singh-gaurav32/ollive-api:latest ./backend
-  docker push ghcr.io/singh-gaurav32/ollive-api:latest
-  docker build -t ghcr.io/singh-gaurav32/ollive-frontend:latest --build-arg VITE_API_BASE_URL="" ./frontend
-  docker push ghcr.io/singh-gaurav32/ollive-frontend:latest
-  ```
-- [ ] **First push only**: GHCR packages default to **private** even from a public repo — go to your GitHub profile → **Packages** → select `ollive-api` (and `ollive-frontend`) → **Package settings → Danger Zone → Change visibility → Public** (needed so the VM can pull without an `imagePullSecret`; confirm this is acceptable — no secrets are baked into the image, those come in via the k8s `Secret`, but the image contents/code become publicly downloadable)
-- [ ] On the VM: just clone the repo for the `k8s/` manifests and README — no build needed there:
-  ```bash
-  sudo apt update && sudo apt install -y git
-  git clone https://github.com/singh-gaurav32/ollive-gaurav.git && cd ollive-gaurav
-  ```
+**Decision change #2** (discovered while executing #1): local build machine is Apple Silicon (arm64), VM is x86_64 — a plain local `docker build` produces the wrong architecture. Proper cross-compilation needs `buildx` + QEMU emulation, which isn't set up with this machine's Colima-backed Docker and wasn't worth configuring for a one-off. Pragmatic fix: installed Docker **on the VM** after all (native x86_64, no emulation needed), built both images there, and pushed to GHCR from the VM instead of from the Mac. Net result is the same as originally intended (GHCR-hosted images, no manual `ctr import`) — just the build step happens on the VM, not locally. Future rebuilds: either repeat this (SSH, `git pull`, rebuild, push) or invest in local `buildx`/QEMU setup if it becomes a frequent need.
+
+- [x] Both `docker login ghcr.io` sessions done **in the user's own terminal** (local Mac, and separately on the VM as `root` via `sudo docker login`) — kept out of this conversation
+- [x] Built both images on the VM: `ghcr.io/singh-gaurav32/ollive-api:latest`, `ghcr.io/singh-gaurav32/ollive-frontend:latest`
+- [x] Pushed both to GHCR
+- [x] Package visibility set to **Public** for both (GitHub profile → Packages → each package → Package settings → Change visibility)
+- [x] Pushed local commits (GHCR image refs, DuckDNS host, Let's Encrypt email) to `origin/main`, VM's clone updated via `git pull` (now at `5cdbfd1`)
 
 ---
 
@@ -112,24 +105,33 @@ OCI Console → **Networking → Virtual Cloud Networks** → your VCN → **Sec
 
 ## J. Apply the manifests
 
-- [ ] `sudo k3s kubectl apply -f k8s/namespace.yaml`
-- [ ] `sudo k3s kubectl apply -f k8s/` (applies everything else)
+- [x] `sudo k3s kubectl apply -f k8s/namespace.yaml`
+- [x] `sudo k3s kubectl apply -f k8s/` (applies everything else)
 
 ---
 
-## K. Verify
+## K. Verify — done, live
 
-- [ ] `sudo k3s kubectl -n ollive get pods` — all should reach `Running`
-- [ ] `sudo k3s kubectl -n ollive get certificate` — wait for `READY=True` (Let's Encrypt issuance can take a minute or two)
-- [ ] Visit `https://YOUR-SUBDOMAIN.duckdns.org` in a browser — should load the login page over real HTTPS
-- [ ] Log in as one of the seeded demo users, send a chat message, check the dashboard — same checks as the local verification, now against the live deployment
+- [x] All pods reached `Running` (api had 2 early restarts racing Postgres startup, self-healed)
+- [x] Certificate `READY: True` — real Let's Encrypt cert issued via HTTP-01 through Traefik
+- [x] `https://gaurav-ollive.duckdns.org` loads the login page over real HTTPS
+- [x] Logged in, sent chat messages, checked the dashboard — all working end-to-end against the live deployment
+
+**Post-launch fixes found via live use** (not blocking the deployment itself, found and fixed after K passed):
+1. `GEMINI_API_KEY` had a typo on first entry → fixed via `k8s/secrets.yaml` + `kubectl apply` + `rollout restart deployment/api`
+2. Google retired `gemini-2.0-flash`, then `gemini-2.5-flash` was also gated for new API keys → settled on `gemini-3-flash-preview` after confirming with a local test script (`backend/`, real API, no cluster round-trip) — much faster feedback loop than redeploying to debug
+3. Dashboard's bucket column showed only the start time, not the full range — small UI fix, verified locally then redeployed
+
+All fixes followed: local test/verify → commit → push → rebuild on VM → push to GHCR → `rollout restart`. Live site now shows real successful Gemini responses (1925ms and 4868ms latencies visible in the dashboard).
 
 ---
 
 ## Status
 
 - **Started**: 2026-08-16
-- **Current step**: D (open the firewall) — SSH (step F's connectivity) already confirmed working while troubleshooting step B
+- **Current step**: none — deployment complete and live, in post-launch stabilization
+- **Live URL**: https://gaurav-ollive.duckdns.org
 - **Instance**: `144.24.101.70`, `VM.Standard.E2.4` (4 OCPU/32GB x86, trial billing, $5 budget alert active), `ap-mumbai-1-AD-1`
-- **Cleanup pending**: terminate unused `161.118.184.11` (wrong-shape first attempt)
-- **Blockers**: none currently — Ampere A1 capacity issue was worked around by switching to a paid trial x86 shape
+- **Registry**: GHCR (`ghcr.io/singh-gaurav32/ollive-{api,frontend}:latest`), public, built natively on the VM (see Step H for why local cross-compilation was abandoned) and pushed from there
+- **Cleanup pending**: terminate unused `161.118.184.11` (wrong-shape first attempt) — not urgent, no cost, just tidiness
+- **Blockers**: none
