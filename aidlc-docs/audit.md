@@ -475,3 +475,27 @@ Found and fixed a genuine bug during real-Postgres verification: LogORM/FailedLo
 **Context**: Unit 4, Functional Design stage complete.
 
 ---
+
+## Unit 4 - Functional Design Approval
+**Timestamp**: 2026-08-16T14:05:00Z
+**AI Prompt**: "Continue to Next Stage - Approve functional design and proceed to NFR Requirements?"
+**User Response**: "Continue to next stage."
+**Status**: Approved
+**Context**: Proceeding to NFR Requirements — where the logs-table indexing decision deferred from Unit 3 finally lands.
+
+---
+
+## Unit 4 - NFR Requirements Planning
+**Timestamp**: 2026-08-16T14:10:00Z
+**AI Response**: Created `construction/plans/unit-04-observability-dashboard-nfr-requirements-plan.md` with 2 questions: logs table indexing now that query_window's real shape is known (timestamp-only vs. composite with status vs. still deferring), and whether to cap requested bucket count to prevent an expensive/accidental huge query.
+**Context**: Unit 4, NFR Requirements stage, planning.
+
+---
+
+## Unit 4 - NFR Requirements Answered & Artifacts Generated
+**Timestamp**: 2026-08-16T14:15:00Z
+**User Input**: "Go with a timestamp index only and reject if the implied bucket count exceeds."
+**AI Response**: Recorded Q1=A (timestamp-only index, new Alembic migration) and Q2=A (reject if implied bucket count exceeds 10,000, 400 response). Generated nfr-requirements.md and tech-stack-decisions.md.
+**Context**: Unit 4, NFR Requirements stage complete.
+
+---
