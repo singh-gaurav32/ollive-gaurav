@@ -24,7 +24,9 @@ export function DashboardPage() {
           <tbody>
             {buckets.map((b) => (
               <tr key={b.bucket_start} className="border-b border-gray-100">
-                <td className="py-2">{new Date(b.bucket_start).toLocaleTimeString()}</td>
+                <td className="py-2">
+                  {new Date(b.bucket_start).toLocaleTimeString()}–{new Date(b.bucket_end).toLocaleTimeString()}
+                </td>
                 <td className="py-2">{b.request_count}</td>
                 <td className="py-2">{b.error_count}</td>
                 <td className="py-2">{b.p50_latency_ms?.toFixed(0) ?? "—"}ms</td>
