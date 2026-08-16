@@ -19,5 +19,8 @@ build/
 .env
 .env.local
 
+# k8s secrets (real values, never commit)
+k8s/secrets.yaml
+
 # OS
 .DS_Store

@@ -631,3 +631,112 @@ Then performed genuine live browser verification (not simulated): started the Vi
 **Context**: Unit 5 complete. Session awaiting direction on Unit 6.
 
 ---
+
+## Unit 6 - Kickoff
+**Timestamp**: 2026-08-16T18:00:00Z
+**User Input**: "I have created the Oracle Cloud account, and now I want to decide how I'm going to proceed with the deployments, that is stage six currently."
+**AI Response**: Confirmed Unit 6 scope (US-6.1 one-command local setup, US-6.2 live k8s deployment) from unit-of-work.md and stories.md. Assessed Functional Design as SKIP for this unit (pure packaging/infra, no new business logic or domain models). Proceeding to NFR Requirements stage with a plan of targeted questions covering tech stack (frontend serving, container registry), domain/HTTPS choice, VM provisioning status, security (secrets management), and CI/deploy workflow — building on the already-decided Oracle Free Tier + k3s target.
+**Context**: Unit 6, per-unit loop starting.
+
+---
+
+## Unit 6 - NFR Requirements Plan Created
+**Timestamp**: 2026-08-16T18:05:00Z
+**AI Response**: Wrote `construction/plans/unit-06-packaging-deployment-nfr-requirements-plan.md` with 8 questions (frontend serving strategy, container registry, domain/hostname, VM provisioning status, Postgres durability, secrets management, network exposure, deploy workflow). Corrected a drafting mistake mid-write where placeholder [Answer] tags were pre-filled with fabricated responses (including an invented domain name) instead of being left blank for the user.
+**Context**: Unit 6, NFR Requirements stage, Part 1 — awaiting user answers.
+
+---
+
+## Unit 6 - NFR Requirements Answered & Artifacts Generated
+**Timestamp**: 2026-08-16T18:15:00Z
+**User Input**: "For question one, I will go with A. Build directly on VM for part two. I want a stable name, independent of episode, I think I'll go with the DNS. I have just created the oracle account, we need to provision it. Or like create everything I've just signed in. For question number five, I'm going to use a PVC on a local VMDs that is option A. Or question of six, I will go with option A. For question 7, I will go with option A. For question eight, also I'll go with option A."
+**AI Response**: Recorded Q1=A (nginx container for frontend), Q2=C (build images directly on VM, no registry), Q3=B (DuckDNS — stable name independent of IP), Q4=A (VM not yet provisioned, to be created in this unit), Q5=A (PVC on local disk, no automated backup), Q6=A (k8s Secrets via kubectl apply from git-ignored file), Q7=A (only 80/443/22 open, no SSH allowlist), Q8=A (manual deploy workflow). All answers unambiguous. Generated nfr-requirements.md and tech-stack-decisions.md under `construction/unit-06-packaging-deployment/nfr-requirements/`.
+**Context**: Unit 6, NFR Requirements stage complete, awaiting approval to proceed to NFR Design.
+
+---
+
+## Unit 6 - NFR Requirements Approval
+**Timestamp**: 2026-08-16T18:20:00Z
+**AI Prompt**: "Continue to Next Stage - Approve NFR requirements and proceed to NFR Design?"
+**User Response**: "Continue to next stage."
+**Status**: Approved
+**Context**: Proceeding to NFR Design.
+
+---
+
+## Unit 6 - NFR Design Generated (no question round needed)
+**Timestamp**: 2026-08-16T18:25:00Z
+**AI Response**: All NFR Requirements decisions were mechanical to realize, with one open design fork resolved by recommendation rather than a user question: reserving Oracle Cloud's free static public IP and pointing DuckDNS at it once, instead of running a dynamic-DNS updater in-cluster (strictly simpler, no real tradeoff). Generated nfr-design-patterns.md (Traefik ingress bundled with k3s, cert-manager + Let's Encrypt HTTP-01, k8s Secret for credentials, local-path PVC for Postgres) and logical-components.md (frontend Dockerfile/nginx.conf, full k8s/ manifest layout, infra provisioned outside the repo, README update scope).
+**Context**: Unit 6, NFR Design stage complete.
+
+---
+
+## Unit 6 - NFR Design Approval
+**Timestamp**: 2026-08-16T18:30:00Z
+**AI Prompt**: "Continue to Next Stage - Approve NFR design and proceed to Infrastructure Design?"
+**User Response**: "continue"
+**Status**: Approved
+**Context**: Proceeding to Infrastructure Design.
+
+---
+
+## Unit 6 - Infrastructure Design Answered & Artifacts Generated
+**Timestamp**: 2026-08-16T18:40:00Z
+**User Input**: "I have signed up for Mumbai region. Option A for question number two. Option A for question three. Use the default for questionnaire four. Use option A for question five."
+**AI Response**: Recorded Q1=ap-mumbai-1, Q2=A (Ubuntu 22.04 ARM), Q3=A (single VM, full 4 OCPU/24GB allocation), Q4=A (50GB boot / 20GB PVC default), Q5=A (no additional infra monitoring beyond kubectl/SSH). Generated infrastructure-design.md (compute/k3s/storage/networking/monitoring mapped to concrete Oracle Cloud resources, including a flagged known risk of Ampere A1 capacity constraints in ap-mumbai-1 with the pre-recorded Hetzner/DigitalOcean fallback) and deployment-architecture.md (Mermaid diagrams for both the Compose and k3s topologies, plus the manual deploy flow).
+**Context**: Unit 6, Infrastructure Design stage complete, awaiting approval to proceed to Code Generation.
+
+---
+
+## Unit 6 - Infrastructure Design Approval
+**Timestamp**: 2026-08-16T18:50:00Z
+**AI Prompt**: "Continue to Next Stage - Approve infrastructure design and proceed to Code Generation?"
+**User Response**: "Continue to next stage."
+**Status**: Approved
+**Context**: Proceeding to Code Generation.
+
+---
+
+## Unit 6 - Code Generation Planning
+**Timestamp**: 2026-08-16T18:55:00Z
+**AI Response**: Created `construction/plans/unit-06-packaging-deployment-code-generation-plan.md`, 13 steps: frontend Dockerfile + nginx.conf (reverse proxy by real backend path prefixes — /auth, /conversations, /metrics, /health — not a generic /api rewrite, since the backend has no /api prefix), docker-compose.yml frontend service addition, full k8s/ manifest set (namespace, postgres/api/frontend, cluster-issuer, ingress, secrets template), README updates for both deployment targets, and local Docker Compose verification. Explicitly scoped that cloud VM provisioning/kubectl execution against the live Oracle VM is documented but not executed in this session (no cloud account access) — local Compose verification is executed directly, same bar as prior units.
+**Context**: Unit 6, Code Generation stage, Part 1 Planning — awaiting approval.
+
+---
+
+## Unit 6 - Code Generation Plan Approval
+
+**Timestamp**: 2026-08-16T19:00:00Z
+**AI Prompt**: "Approve this plan to start generation?"
+**User Response**: "Approve, go ahead with generation."
+**Status**: Approved
+**Context**: Proceeding to Code Generation Part 2 - Generation.
+
+---
+
+## Unit 6 - Code Generation Complete
+**Timestamp**: 2026-08-16T19:20:00Z
+**AI Response**: Generated `frontend/Dockerfile` + `frontend/nginx.conf` (multi-stage build, SPA fallback, reverse proxy to the backend's real path groups with SSE unbuffered), added the `frontend` service to `docker-compose.yml`, and created the full `k8s/` manifest set (namespace, postgres/api/frontend Deployment+Service+PVC, cert-manager ClusterIssuer, Traefik Ingress, secrets template). Simplified the Ingress mid-generation to route all traffic to the `frontend` Service only, letting nginx handle the internal backend split — avoids duplicating routing logic between Traefik and nginx; amended the two already-approved design docs (nfr-design/logical-components.md, infrastructure-design/deployment-architecture.md) to reflect this and the real (non-`/api`) path prefixes. Updated README.md with a one-command full-stack quickstart and a full 10-step Oracle Cloud k3s deployment walkthrough, plus the Unit 6 status entry. Added `k8s/secrets.yaml` to `.gitignore`.
+
+Verified locally: `docker-compose up -d --build` (standalone `docker-compose` v5, since the `docker compose` plugin isn't installed in this environment) built and started all three services cleanly. Curl confirmed the frontend root and both proxied paths (`/health`, `/auth/users`). Real browser verification through `localhost:8080`: existing session cookie carried over from Unit 5, conversation history loaded via the proxy, a new message POSTed through the proxied unbuffered SSE stream (reached the backend and streamed correctly; terminates due to the dummy `GEMINI_API_KEY` in this environment, same known behavior as Unit 5), and direct navigation to `/dashboard` exercised the nginx SPA fallback correctly, showing the failed call logged via Unit 3's ingestion pipeline and Unit 4's dashboard - confirming the whole stack works end-to-end through the new packaging, not just in isolation.
+
+Cloud deployment (provisioning the Oracle VM, `kubectl apply`) is documented in the README but not executed — no access to the user's cloud account in this environment.
+**Context**: Unit 6, Code Generation stage complete, awaiting approval.
+
+---
+
+## Unit 6 - Branch Convention Correction
+**Timestamp**: 2026-08-16T19:25:00Z
+**AI Response**: Noticed all of Unit 6's Code Generation work (through local verification) had been done directly on `main`, not on a `unit/06-packaging-deployment` branch as the project's established branching convention requires. Created the branch now, before anything was committed — `git checkout -b` carried all uncommitted working-tree changes over cleanly, nothing lost. No commits had been made on `main`, so no history needed to be rewritten.
+**Context**: Process correction, Unit 6 Code Generation stage.
+
+---
+
+## Unit 6 - Code Generation Approval
+**Timestamp**: 2026-08-16T19:30:00Z
+**AI Prompt**: "Continue to Next Stage - Approve code generation and proceed to Build and Test?"
+**User Response**: "Continue to next stage."
+**Status**: Approved
+**Context**: Unit 6 Code Generation approved. Unit 6 is the final unit (6 of 6) - following the precedent set by Units 1-5 (each merged to `main` right after its own Code Generation + live verification passed, before the top-level Build and Test phase), asking the user to confirm the merge of `unit/06-packaging-deployment` to `main` next, rather than assuming "continue to next stage" also authorizes the merge (matches Unit 5's pattern, where merge was a separate explicit confirmation).
+
+---
