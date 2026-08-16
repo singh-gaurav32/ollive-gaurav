@@ -16,7 +16,7 @@ _ROLE_MAP = {Role.USER: "user", Role.ASSISTANT: "model", Role.SYSTEM: "user"}
 
 
 class GeminiProvider(LLMProvider):
-    def __init__(self, api_key: str, model: str = "gemini-flash-latest") -> None:
+    def __init__(self, api_key: str, model: str = "gemini-3-flash-preview") -> None:
         self._client = genai.Client(api_key=api_key)
         self.model = model
 
