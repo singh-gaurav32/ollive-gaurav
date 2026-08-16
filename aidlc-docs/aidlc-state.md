@@ -46,10 +46,10 @@
 - [x] Build and Test — **complete**: 74/74 automated unit tests passing (65 backend + 9 frontend), 3/3 cross-unit integration scenarios verified live against a fresh build of `main`, performance testing explicitly N/A (no requirements defined). See `aidlc-docs/construction/build-and-test/build-and-test-summary.md`.
 
 ### 🟡 OPERATIONS PHASE
-- [ ] Operations — PLACEHOLDER
+- [x] Operations — acknowledged as a placeholder stage (approved by user, no defined process to execute); practical next step handed off to the user's own cloud provisioning, per README
 
 ## Current Status
-- **Lifecycle Phase**: CONSTRUCTION complete → OPERATIONS (placeholder)
-- **Current Stage**: Build and Test complete, all 6 units merged and verified
-- **Next Stage**: Operations is a placeholder in this project's workflow; the practical next step is the user provisioning the Oracle Cloud VM and running the README's cloud deployment walkthrough
-- **Status**: System fully built, tested, and merged to `main`. Awaiting the user's decision on when to provision the live Oracle Cloud deployment.
+- **Lifecycle Phase**: OPERATIONS (placeholder, acknowledged) — AI-DLC workflow complete
+- **Current Stage**: N/A — all defined stages (INCEPTION, CONSTRUCTION, Build and Test) are done and approved
+- **Next Stage**: None defined by the workflow. Real-world next step: user provisions the Oracle Cloud VM and runs the README's cloud deployment walkthrough, optionally with Claude's help once cloud/SSH access is handed over
+- **Status**: System fully built, tested, and merged to `main`. Live cloud deployment is the only remaining real-world task, outside the AI-DLC workflow's scope.
