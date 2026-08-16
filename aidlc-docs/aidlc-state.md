@@ -40,13 +40,14 @@
 - **Unit 1 — Provider Abstraction & Auto-Instrumentation** — MERGED to `main`
 - **Unit 2 — Chatbot Spine** — MERGED to `main` (33/33 tests, verified end-to-end via real Docker Compose stack)
 - **Unit 3 — Ingestion Pipeline Hardening** — MERGED to `main` (48/48 tests, verified end-to-end through the live API with a real Gemini error flowing all the way to a `logs` row)
-- **Unit 4 — Observability Dashboard** (branch: `unit/04-observability-dashboard`)
-  - [x] Functional Design (unified `/metrics` endpoint, defaults/validation, aggregate access scope)
-  - [x] NFR Requirements (timestamp-only index, bucket-count cap at 10,000)
-  - [x] NFR Design (index as its own migration, cap as an API-boundary check)
+- **Unit 4 — Observability Dashboard** — MERGED to `main` (53/53 tests, verified end-to-end against the live API including the bucket-count cap)
+- **Unit 5 — Frontend Application + Auth/Isolation** (branch: `unit/05-frontend-auth`)
+  - [x] Functional Design (auth flow, frontend architecture, session_id placeholder retirement)
+  - [x] NFR Requirements (CORS, manual TS types, Vitest+RTL)
+  - [x] NFR Design (CORS setup, AuthContext dependency, frontend layout)
   - [x] Infrastructure Design — SKIP (no infra changes this unit)
-  - [x] Code Generation (53/53 tests passing, verified end-to-end against the live API including the bucket-count cap — awaiting approval to merge)
-- [ ] Units 5-6 — not yet started
+  - [x] Code Generation (74 automated tests passing across backend+frontend, 4 real bugs found and fixed via live browser verification, multi-user isolation verified two ways — awaiting approval to merge)
+- [ ] Unit 6 (Packaging & Deployment) — not yet started
 - [ ] Build and Test (after all units complete)
 
 ### 🟡 OPERATIONS PHASE
@@ -54,6 +55,6 @@
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION
-- **Current Stage**: Unit 4 (Observability Dashboard) — Code Generation complete, awaiting merge approval
-- **Next Stage**: Merge Unit 4, then Unit 5 (Frontend Application + Auth/Isolation)
+- **Current Stage**: Unit 5 (Frontend Application + Auth/Isolation) — Code Generation complete, awaiting merge approval
+- **Next Stage**: Merge Unit 5, then Unit 6 (Packaging & Deployment) — the final unit
 - **Status**: In progress

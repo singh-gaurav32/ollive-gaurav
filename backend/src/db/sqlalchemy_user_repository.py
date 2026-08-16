@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from .models import Session, User
@@ -23,6 +23,12 @@ class SqlAlchemyUserRepository(UserRepository):
             row = result.scalar_one_or_none()
             return User(id=row.id, username=row.username, created_at=row.created_at) if row else None
 
+    async def get_by_id(self, user_id: UUID) -> User | None:
+        async with self._session_factory() as session:
+            result = await session.execute(select(UserORM).where(UserORM.id == user_id))
+            row = result.scalar_one_or_none()
+            return User(id=row.id, username=row.username, created_at=row.created_at) if row else None
+
     async def get_or_create_seed_user(self) -> User:
         # Check-then-create, not atomic - a benign race at this project's
         # scale (a single seeded demo user, not a real signup flow). An
@@ -30,12 +36,20 @@ class SqlAlchemyUserRepository(UserRepository):
         existing = await self.get_by_username(SEED_USERNAME)
         if existing is not None:
             return existing
+        return await self.create_user(SEED_USERNAME)
+
+    async def create_user(self, username: str) -> User:
         async with self._session_factory() as session:
-            row = UserORM(username=SEED_USERNAME)
+            row = UserORM(username=username)
             session.add(row)
             await session.commit()
             await session.refresh(row)
             return User(id=row.id, username=row.username, created_at=row.created_at)
+
+    async def list_users(self) -> list[User]:
+        async with self._session_factory() as session:
+            result = await session.execute(select(UserORM).order_by(UserORM.username))
+            return [User(id=row.id, username=row.username, created_at=row.created_at) for row in result.scalars().all()]
 
     async def create_session(self, user_id: UUID) -> Session:
         async with self._session_factory() as session:
@@ -50,3 +64,8 @@ class SqlAlchemyUserRepository(UserRepository):
             result = await session.execute(select(SessionORM).where(SessionORM.id == session_id))
             row = result.scalar_one_or_none()
             return Session(id=row.id, user_id=row.user_id, created_at=row.created_at) if row else None
+
+    async def delete_session(self, session_id: UUID) -> None:
+        async with self._session_factory() as session:
+            await session.execute(delete(SessionORM).where(SessionORM.id == session_id))
+            await session.commit()

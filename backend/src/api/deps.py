@@ -1,5 +1,5 @@
-"""FastAPI dependencies: a wired ChatService, an IngestionWorker, and a
-current-user stand-in.
+"""FastAPI dependencies: a wired ChatService, an IngestionWorker, and the
+auth context (Unit 5, replaces Unit 2's get_current_user stub).
 
 get_chat_service and get_ingestion_worker are deliberately cached
 singletons, not per-request instances - ChatService's active-stream
@@ -12,9 +12,14 @@ would be draining a different queue than the one events are published to.
 from __future__ import annotations
 
 import os
+from dataclasses import dataclass
 from functools import lru_cache
+from uuid import UUID
+
+from fastapi import Depends, HTTPException, Request
 
 from analytics.service import AnalyticsService
+from auth import SESSION_COOKIE_NAME, AuthService
 from chat.service import ChatService
 from chat.truncation import WindowTruncationStrategy
 from db.engine import session_factory
@@ -73,11 +78,37 @@ def get_analytics_service() -> AnalyticsService:
 
 
 @lru_cache
-def _user_repository() -> SqlAlchemyUserRepository:
+def get_user_repository() -> SqlAlchemyUserRepository:
     return SqlAlchemyUserRepository(session_factory)
 
 
-async def get_current_user() -> User:
-    """Temporary: always resolves to the seeded demo user until Unit 5
-    wires in real session-based auth (Unit 2 Q4)."""
-    return await _user_repository().get_or_create_seed_user()
+@lru_cache
+def get_auth_service() -> AuthService:
+    return AuthService(get_user_repository())
+
+
+@dataclass
+class AuthContext:
+    """Carries both the current User and the real session id - replaces
+    Unit 2's user.id-as-session_id placeholder (BR4)."""
+
+    user: User
+    session_id: UUID
+
+
+async def get_auth_context(
+    request: Request, auth_service: AuthService = Depends(get_auth_service)
+) -> AuthContext:
+    raw_session_id = request.cookies.get(SESSION_COOKIE_NAME)
+    if raw_session_id is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        session_id = UUID(raw_session_id)
+    except ValueError:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    user = await auth_service.validate_session(session_id)
+    if user is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    return AuthContext(user=user, session_id=session_id)

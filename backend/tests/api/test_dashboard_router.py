@@ -3,11 +3,14 @@ bucket-count cap, all with a fake AnalyticsService (no real DB)."""
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+from uuid import uuid4
 
 from fastapi.testclient import TestClient
 
 from api import deps
+from api.deps import AuthContext
 from db.log_repository import MetricBucket
+from db.models import User
 from main import app
 
 
@@ -23,6 +26,9 @@ class _FakeAnalyticsService:
 
 def _override(service) -> None:
     app.dependency_overrides[deps.get_analytics_service] = lambda: service
+    app.dependency_overrides[deps.get_auth_context] = lambda: AuthContext(
+        user=User(username="test-user"), session_id=uuid4()
+    )
 
 
 def test_defaults_applied_when_omitted():

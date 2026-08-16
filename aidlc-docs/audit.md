@@ -595,3 +595,30 @@ Found and fixed a genuine bug during real-Postgres verification: LogORM/FailedLo
 **Context**: Unit 5, NFR Design stage complete.
 
 ---
+
+## Unit 5 - NFR Design Approval
+**Timestamp**: 2026-08-16T15:30:00Z
+**AI Prompt**: "Continue to Next Stage - Approve NFR design and proceed to Code Generation?"
+**User Response**: "Continue to go generation. Code generation."
+**Status**: Approved
+**Context**: Proceeding to Code Generation, Part 1 Planning — the largest unit yet (backend auth + entire frontend SPA).
+
+---
+
+## Unit 5 - Code Generation Planning
+**Timestamp**: 2026-08-16T15:35:00Z
+**AI Response**: Created `construction/plans/unit-05-frontend-auth-code-generation-plan.md`, 6 steps spanning backend auth (AuthService, auth_router, the session_id fix in chat_router), backend auth tests, frontend project setup, frontend API/auth layer, frontend pages/components, and docs. Verification plan explicitly includes live in-browser testing (login, send message, cancel mid-stream, resume, dashboard) via the Browser tool, not just code review.
+**Context**: Unit 5, Code Generation stage, Part 1 Planning.
+
+---
+
+## Unit 5 - Code Generation Complete
+**Timestamp**: 2026-08-16T16:45:00Z
+**AI Response**: Generated the full backend auth layer (AuthService in its own auth/ package, UserRepository extensions, auth_router, AuthContext/get_auth_context replacing get_current_user everywhere including the session_id fix in chat_router) and the full frontend SPA (Vite/React/TS/Tailwind/TanStack Query - login, chat with streaming/cancel, conversation list/resume, dashboard). Caught and fixed a copy-paste replace_all accident mid-generation (mangled sqlalchemy_user_repository import). Wrote and ran the new auth tests, including catching and fixing a test double bug (constructing a fresh fake per dependency resolution, making a would-be-passing test a false positive).
+
+Backend: 57/57 fast + 8/8 real-Postgres passing. Frontend: 9/9 Vitest passing, clean tsc.
+
+Then performed genuine live browser verification (not simulated): started the Vite dev server via the Browser tool, rebuilt the backend container, and found + fixed 4 real bugs that only surfaced by actually clicking through the app - relative API_BASE hitting Vite's own dev server instead of the backend (masked as a silent empty response due to SPA fallback), an unstyled black background, "new conversation" not navigating into the created conversation, and a 401-redirect-loop risk in AuthContext's own initial auth check. After fixes: verified login persistence, a real chat send with graceful failure handling (no valid Gemini key in this environment), real aggregated dashboard data, conversation resume with full history, and - critically - multi-user isolation verified two ways (bob sees zero conversations, and a direct URL guess at alice's conversation returns a genuine 404 from the backend, not a UI-level hide).
+**Context**: Unit 5, Code Generation stage, Part 2 Generation complete, all plan steps marked [x].
+
+---
