@@ -385,3 +385,27 @@ Verified end-to-end, not just via pytest: ran `uv sync` (49 packages), ran the n
 **Context**: Unit 3, Functional Design stage complete.
 
 ---
+
+## Unit 3 - Functional Design Approval
+**Timestamp**: 2026-08-16T12:35:00Z
+**AI Prompt**: "Continue to Next Stage - Approve functional design and proceed to NFR Requirements?"
+**User Response**: "Continue to next stage."
+**Status**: Approved
+**Context**: Proceeding to NFR Requirements.
+
+---
+
+## Unit 3 - NFR Requirements Planning
+**Timestamp**: 2026-08-16T12:40:00Z
+**AI Response**: Created `construction/plans/unit-03-ingestion-pipeline-nfr-requirements-plan.md` with 2 questions (worker crash recovery: let it die loudly-logged vs. auto-restart supervisor loop; logs table indexing ahead of Unit 4's dashboard queries). Tech Stack/Security/Scalability/Availability marked N/A with rationale.
+**Context**: Unit 3, NFR Requirements stage, planning.
+
+---
+
+## Unit 3 - NFR Requirements Answered & Artifacts Generated
+**Timestamp**: 2026-08-16T12:45:00Z
+**User Input**: "Let it die, loudly, loudly locked, and wait for unit 4 for indexes."
+**AI Response**: Recorded Q1=A (let it die, critical-level logging) and Q2=B (no indexes yet, deferred to Unit 4). Generated `nfr-requirements.md` and `tech-stack-decisions.md` (no new dependencies this unit — recorded explicitly rather than omitted).
+**Context**: Unit 3, NFR Requirements stage complete.
+
+---
