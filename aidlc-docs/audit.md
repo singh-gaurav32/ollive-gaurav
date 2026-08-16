@@ -515,3 +515,19 @@ Found and fixed a genuine bug during real-Postgres verification: LogORM/FailedLo
 **Context**: Unit 4, NFR Design stage complete.
 
 ---
+
+## Unit 4 - NFR Design Approval
+**Timestamp**: 2026-08-16T14:30:00Z
+**AI Prompt**: "Continue to Next Stage - Approve NFR design and proceed to Code Generation?"
+**User Response**: "Continue to code generation."
+**Status**: Approved
+**Context**: Proceeding to Code Generation, Part 1 Planning.
+
+---
+
+## Unit 4 - Code Generation Complete
+**Timestamp**: 2026-08-16T14:40:00Z
+**AI Response**: Generated all files per plan: AnalyticsService (thin delegation), dashboard_router.py (defaults, validation, bucket-count cap), deps.py/main.py wiring, migration 0003 (ix_logs_timestamp), and tests (5 new fast tests, 1 new real-DB test confirming the index actually exists via pg_indexes). Full suite: 53/53 passing (47 fast + 8 real-Postgres). Applied the migration and rebuilt the live stack; GET /metrics with defaults returned real aggregated data from Unit 3's verification-pass rows, and a deliberately wide range correctly triggered the bucket-count cap against the live system with the exact expected message.
+**Context**: Unit 4, Code Generation stage, Part 2 Generation complete, all plan steps marked [x].
+
+---

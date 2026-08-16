@@ -176,3 +176,13 @@ async def test_failed_log_event_insert_does_not_raise(failed_log_repo):
     )
 
     await failed_log_repo.insert(record)
+
+
+async def test_logs_timestamp_index_exists(factory):
+    from sqlalchemy import text
+
+    async with factory() as session:
+        result = await session.execute(
+            text("SELECT indexname FROM pg_indexes WHERE tablename = 'logs' AND indexname = 'ix_logs_timestamp'")
+        )
+        assert result.scalar_one_or_none() == "ix_logs_timestamp"

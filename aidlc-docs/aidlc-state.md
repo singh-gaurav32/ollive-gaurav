@@ -42,10 +42,10 @@
 - **Unit 3 — Ingestion Pipeline Hardening** — MERGED to `main` (48/48 tests, verified end-to-end through the live API with a real Gemini error flowing all the way to a `logs` row)
 - **Unit 4 — Observability Dashboard** (branch: `unit/04-observability-dashboard`)
   - [x] Functional Design (unified `/metrics` endpoint, defaults/validation, aggregate access scope)
-  - [ ] NFR Requirements — IN PROGRESS (logs table indexing decision lands here, now that query_window's shape is concrete)
-  - [ ] NFR Design — TBD
-  - [ ] Infrastructure Design — TBD
-  - [ ] Code Generation
+  - [x] NFR Requirements (timestamp-only index, bucket-count cap at 10,000)
+  - [x] NFR Design (index as its own migration, cap as an API-boundary check)
+  - [x] Infrastructure Design — SKIP (no infra changes this unit)
+  - [x] Code Generation (53/53 tests passing, verified end-to-end against the live API including the bucket-count cap — awaiting approval to merge)
 - [ ] Units 5-6 — not yet started
 - [ ] Build and Test (after all units complete)
 
@@ -54,6 +54,6 @@
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION
-- **Current Stage**: Unit 4 (Observability Dashboard) — Functional Design complete, NFR Requirements next
-- **Next Stage**: NFR Requirements for Unit 4
+- **Current Stage**: Unit 4 (Observability Dashboard) — Code Generation complete, awaiting merge approval
+- **Next Stage**: Merge Unit 4, then Unit 5 (Frontend Application + Auth/Isolation)
 - **Status**: In progress
