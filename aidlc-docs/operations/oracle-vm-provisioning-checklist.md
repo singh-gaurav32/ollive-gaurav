@@ -57,10 +57,10 @@ OCI Console → **Networking → Virtual Cloud Networks** → your VCN → **Sec
 
 ## E. DuckDNS
 
-- [ ] Sign up / log in at [duckdns.org](https://www.duckdns.org) (GitHub/Google/etc. login, no separate password)
-- [ ] Create a subdomain, e.g. `ollive.duckdns.org` — record the exact one chosen: `________________`
-- [ ] Set its IP to **`144.24.101.70`**
-- [ ] Verify propagation: `dig +short YOUR-SUBDOMAIN.duckdns.org` should return `144.24.101.70` (may take a few minutes)
+- [x] Signed up, created subdomain (first choice `gaurav` was already taken by another DuckDNS user — subdomains are global/first-come-first-served)
+- [x] Using **`gaurav-ollive.duckdns.org`**, set to `144.24.101.70`
+- [x] Propagation confirmed: `dig +short gaurav-ollive.duckdns.org` → `144.24.101.70`
+- [x] Pre-filled the real hostname into `k8s/ingress.yaml` (both `tls.hosts` and `rules.host`) and the real contact email (`singh.gaurav.id@gmail.com`) into `k8s/cluster-issuer.yaml`, committed to `main` — nothing left to hand-edit for these two files in step I
 
 ---
 

@@ -13,10 +13,10 @@ spec:
   ingressClassName: traefik
   tls:
     - hosts:
-        - YOUR-SUBDOMAIN.duckdns.org
+        - gaurav-ollive.duckdns.org
       secretName: ollive-tls
   rules:
-    - host: YOUR-SUBDOMAIN.duckdns.org
+    - host: gaurav-ollive.duckdns.org
       http:
         paths:
           - path: /
