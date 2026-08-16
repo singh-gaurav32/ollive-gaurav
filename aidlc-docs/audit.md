@@ -499,3 +499,19 @@ Found and fixed a genuine bug during real-Postgres verification: LogORM/FailedLo
 **Context**: Unit 4, NFR Requirements stage complete.
 
 ---
+
+## Unit 4 - NFR Requirements Approval
+**Timestamp**: 2026-08-16T14:20:00Z
+**AI Prompt**: "Continue to Next Stage - Approve NFR requirements and proceed to NFR Design?"
+**User Response**: "Continue."
+**Status**: Approved
+**Context**: Proceeding to NFR Design.
+
+---
+
+## Unit 4 - NFR Design Generated (no question round needed)
+**Timestamp**: 2026-08-16T14:25:00Z
+**AI Response**: Both NFR Requirements decisions were mechanical to realize, no question round needed. Generated nfr-design-patterns.md (index as its own migration revision 0003, bucket-count cap as an API-boundary check before the expensive query is ever issued) and logical-components.md (AnalyticsService, dashboard_router.py, the new migration).
+**Context**: Unit 4, NFR Design stage complete.
+
+---
