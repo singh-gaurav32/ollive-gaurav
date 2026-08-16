@@ -451,3 +451,27 @@ Found and fixed a genuine bug during real-Postgres verification: LogORM/FailedLo
 **Context**: Unit 3, Code Generation stage, Part 2 Generation complete, all plan steps marked [x].
 
 ---
+
+## Unit 3 - Merged, Unit 4 Started
+**Timestamp**: 2026-08-16T13:50:00Z
+**User Input**: "Yes, let's move forward, baby."
+**Status**: Approved
+**AI Response**: Merged `unit/03-ingestion-pipeline` into `main` (--no-ff, 36 files). Created branch `unit/04-observability-dashboard`.
+**Context**: Unit 3 complete. Starting Unit 4 (Observability Dashboard).
+
+---
+
+## Unit 4 - Functional Design Planning
+**Timestamp**: 2026-08-16T13:55:00Z
+**AI Response**: Noted this unit is thin since query_window's aggregation logic was already built in Unit 3. Assessed stages: Functional Design=EXECUTE, NFR Requirements=EXECUTE (this is exactly where the deferred logs-table indexing decision lands, now that the query shape is concretely known), Infrastructure Design=SKIP. Created `construction/plans/unit-04-observability-dashboard-functional-design-plan.md` with 3 questions: endpoint shape (one unified /metrics endpoint vs. three per component-methods.md's original sketch), parameter defaults/validation, and access scope (aggregate metrics aren't per-user scoped, unlike conversations).
+**Context**: Unit 4, Functional Design stage, planning.
+
+---
+
+## Unit 4 - Functional Design Answered & Artifacts Generated
+**Timestamp**: 2026-08-16T14:00:00Z
+**User Input**: "Go with recommended in all the 3 questions."
+**AI Response**: Recorded all 3 as option A (one unified /metrics endpoint, last-1h/60s defaults with 400 on invalid range, aggregate view not per-user scoped). Generated domain-entities.md, business-rules.md, business-logic-model.md - kept deliberately small since AnalyticsService is a thin delegation layer, the real aggregation logic already existing in Unit 3's query_window.
+**Context**: Unit 4, Functional Design stage complete.
+
+---
