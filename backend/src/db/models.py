@@ -70,3 +70,26 @@ class LogRecord(BaseModel):
     input_preview: str
     output_preview: str
     extra: dict[str, Any] = Field(default_factory=dict)
+
+
+FailureStage = Literal["validate", "extract", "redact", "persist"]
+
+
+class FailedLogEvent(BaseModel):
+    """The dead-letter record for a pipeline-stage failure (Unit 3, BR-PII).
+
+    Deliberately has no input_preview/output_preview fields - a failure
+    that happens before redaction completes must never risk writing
+    unredacted text to durable storage, so preview text is omitted
+    entirely rather than conditionally redacted.
+    """
+
+    id: UUID = Field(default_factory=uuid4)
+    model: str
+    provider: str
+    conversation_id: UUID
+    session_id: UUID
+    timestamp: datetime
+    failure_stage: FailureStage
+    failure_reason: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

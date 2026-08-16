@@ -425,3 +425,29 @@ Verified end-to-end, not just via pytest: ran `uv sync` (49 packages), ran the n
 **Context**: Unit 3, NFR Design stage complete.
 
 ---
+
+## Unit 3 - NFR Design Approval
+**Timestamp**: 2026-08-16T13:00:00Z
+**AI Prompt**: "Continue to Next Stage - Approve NFR design and proceed to Code Generation?"
+**User Response**: "Continue, bro."
+**Status**: Approved
+**Context**: Proceeding to Code Generation, Part 1 Planning.
+
+---
+
+## Unit 3 - Code Generation Planning
+**Timestamp**: 2026-08-16T13:05:00Z
+**AI Response**: Created `construction/plans/unit-03-ingestion-pipeline-code-generation-plan.md`, 7 steps. Flagged that query_window (percentile_cont-based windowed aggregation) is implemented in this unit per unit-of-work.md, not deferred to Unit 4 — Unit 3 owns the logs table. Verification plan includes migrating against the live Postgres, running the extended real-DB test suite, and sending an actual chat message through the rebuilt running API to confirm an event flows through the entire system end to end for the first time, not just that the code compiles.
+**Context**: Unit 3, Code Generation stage, Part 1 Planning.
+
+---
+
+## Unit 3 - Code Generation Complete
+**Timestamp**: 2026-08-16T13:45:00Z
+**User Input**: "continue" (implicit approval to generate, following the presented plan)
+**AI Response**: Generated all files per the approved plan: InProcessEventQueue (replacing and deleting NoOpEventQueue), the 4 pipeline stage classes, IngestionWorker, db/ additions (FailedLogEvent model, LogORM/FailedLogEventORM, 2 new repository implementations including query_window's percentile_cont aggregation), migration 0002, and the deps.py/main.py wiring (shared InProcessEventQueue singleton, FastAPI lifespan managing the worker task with crash-visibility done_callback). Full test suite: 48/48 passing (41 fast + 7 real-Postgres).
+
+Found and fixed a genuine bug during real-Postgres verification: LogORM/FailedLogEventORM timestamp columns weren't declared DateTime(timezone=True) despite the migration creating them as timestamptz, causing asyncpg to reject timezone-aware Python datetimes on insert. Fixed there and proactively in every other ORM timestamp column with the same latent risk. Rebuilt the full docker-compose stack and sent an actual chat request through the live API - it genuinely failed against the real Gemini API (no valid key available in this environment) - and traced that failure through the entire real system (InstrumentedProvider -> real InProcessEventQueue -> real IngestionWorker -> pipeline -> a real row in `logs`, confirmed via direct psql query with the actual Gemini error message). First true end-to-end pass through the whole system, not simulated.
+**Context**: Unit 3, Code Generation stage, Part 2 Generation complete, all plan steps marked [x].
+
+---

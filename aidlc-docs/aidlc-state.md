@@ -52,7 +52,7 @@
 - [x] NFR Requirements (let worker die loudly on unexpected crash, no logs indexes yet — deferred to Unit 4)
 - [x] NFR Design (asyncio task done_callback for crash visibility, component layout)
 - [x] Infrastructure Design — SKIP (no infra changes this unit)
-- [ ] Code Generation
+- [x] Code Generation (48/48 tests passing, verified end-to-end through the live API with a real Gemini error flowing all the way to a `logs` row — awaiting approval to merge)
 - [ ] Build and Test
 
 ### 🟡 OPERATIONS PHASE
