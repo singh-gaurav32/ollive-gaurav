@@ -8,41 +8,37 @@ Design decisions behind these choices: `aidlc-docs/construction/unit-06-packagin
 
 ---
 
-## A. SSH key pair
+## A. SSH key pair — done
 
-- [ ] Check if you already have one: `ls ~/.ssh/id_ed25519.pub` (or `id_rsa.pub`)
-- [ ] If not, generate one: `ssh-keygen -t ed25519 -C "ollive-oracle-vm"`
-- [ ] Have the **public** key contents ready to paste during instance creation (`cat ~/.ssh/id_ed25519.pub`)
-
----
-
-## B. Create the Compute Instance
-
-OCI Console → **Compute → Instances → Create Instance**
-
-- [ ] **Name**: `ollive-vm` (or your preference)
-- [ ] **Compartment**: your root/default compartment is fine for a single demo VM
-- [ ] **Placement / Availability Domain**: default is fine
-- [ ] **Image**: **Ubuntu 22.04** — click "Change Image", filter to Canonical Ubuntu, select 22.04, confirm it's the **aarch64/ARM** variant
-- [ ] **Shape**: click "Change Shape" → **Ampere** → **VM.Standard.A1.Flex** → set **4 OCPUs / 24 GB memory** (the full Always Free allocation)
-- [ ] **Boot volume**: expand "Boot volume" → set size to **50 GB**
-- [ ] **Networking**: use the default VCN/subnet (or create one if this is a fresh account with none yet) — leave "Assign a public IPv4 address" checked for now (we'll swap it for a reserved one in step C)
-- [ ] **SSH keys**: paste your public key from step A
-- [ ] Click **Create**, wait for the instance state to become **Running** (a few minutes)
-- [ ] Note the instance's **ephemeral public IP** shown on the instance detail page: `________________`
-
-**If instance creation fails with "Out of host capacity"**: this is a known, common Always-Free Ampere A1 constraint in some regions/AD combinations — not specific to this setup. Try a different Availability Domain in the same region first; if it keeps failing, that's the trigger for the pre-agreed fallback (Hetzner/DigitalOcean VPS, same `k3s` steps below apply unchanged).
+- [x] Checked existing keys — found `~/.ssh/termux_ed25519`, but it's scoped to a specific Termux host in `~/.ssh/config`, so generated a dedicated key instead
+- [x] Generated: `~/.ssh/ollive_oracle_ed25519` (+ `.pub`)
+- [x] Public key, ready to paste during instance creation:
+  ```
+  ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBP92HQGfmTyolfgG0yWa/UXfYLrXuHyXu2ht2Fdy9Ze ollive-oracle-vm
+  ```
 
 ---
 
-## C. Reserve a static public IP
+## B. Create the Compute Instance — done, deviated from plan
 
-OCI Console → **Networking → IP Management → Reserved Public IPs → Create Reserved Public IP**
+**What actually happened** (recorded here since it changes later steps):
+1. First attempt: shape/image selection defaulted to OCI's other Always Free shape, `VM.Standard.E2.1.Micro` (1 OCPU/1GB, x86) instead of Ampere A1 — too small to run this stack. Instance created at `161.118.184.11`, **not used, should be terminated** as cleanup (see Status section).
+2. Second attempt: correctly selected Ampere A1.Flex (ARM) + Ubuntu 22.04, but hit `Out of host capacity for shape VM.Standard.A1.Flex in AD-1` — a genuine, common Always-Free ARM capacity constraint in `ap-mumbai-1`, not specific to this account.
+3. Third attempt: created **`VM.Standard.E2.4`** instead (4 OCPU / 32GB, **x86_64**, NOT part of Always Free — bills against the 30-day/$300 trial credit). Verified via the instance's own metadata endpoint. **Running at `144.24.101.70`.** A $5/month budget alert was set up on the root compartment as a safety net before proceeding.
 
-- [ ] Create a new reserved IP in the same region
-- [ ] Note the reserved IP: `________________`
-- [ ] Attach it to the VM: go to the instance's **VNIC** → **IPv4 Addresses** → edit the public IP → switch from "Ephemeral" to your new **Reserved IP**
-- [ ] Confirm you can still reach the instance at the new IP (`ping` or just note it — SSH check comes in step F)
+**Consequence for later steps**: our images are multi-arch (`python:3.12-slim`, `node:20-alpine`, `nginx:alpine`, `pgvector/pgvector:pg16` all publish amd64 builds), so x86 changes nothing about the app itself. Given this VM is intentionally short-lived (trial, user plans to tear down within about a week), we're **skipping the reserved static IP in step C** — the ephemeral IP won't change as long as the instance keeps running continuously, and DuckDNS's `A` record is a one-field update if it ever does.
+
+- [x] Instance running at **`144.24.101.70`**, `ap-mumbai-1-AD-1`, `VM.Standard.E2.4` (4 OCPU/32GB, x86_64)
+- [x] $5/month OCI Budget alert created on root compartment (belt-and-suspenders alongside the trial's own no-auto-charge policy)
+- [ ] **Cleanup**: terminate the unused `161.118.184.11` (`VM.Standard.E2.1.Micro`) instance whenever convenient — not blocking, just tidy
+
+---
+
+## C. Reserve a static public IP — skipped
+
+**Decision**: skipped, not forgotten. This VM is intentionally short-lived (trial instance, plan to tear down within about a week per the user). The ephemeral IP (`144.24.101.70`) won't change as long as the instance keeps running continuously, and reserving a static IP adds a step with no real benefit for a demo this short — if the IP ever does change (e.g. after a stop/start cycle), DuckDNS's `A` record is a one-field fix in step E.
+
+- [x] Using ephemeral IP directly: **`144.24.101.70`**
 
 ---
 
@@ -63,14 +59,14 @@ OCI Console → **Networking → Virtual Cloud Networks** → your VCN → **Sec
 
 - [ ] Sign up / log in at [duckdns.org](https://www.duckdns.org) (GitHub/Google/etc. login, no separate password)
 - [ ] Create a subdomain, e.g. `ollive.duckdns.org` — record the exact one chosen: `________________`
-- [ ] Set its IP to the **reserved static IP** from step C
-- [ ] Verify propagation: `dig +short YOUR-SUBDOMAIN.duckdns.org` should return the reserved IP (may take a few minutes)
+- [ ] Set its IP to **`144.24.101.70`**
+- [ ] Verify propagation: `dig +short YOUR-SUBDOMAIN.duckdns.org` should return `144.24.101.70` (may take a few minutes)
 
 ---
 
 ## F. SSH in, install k3s
 
-- [ ] `ssh ubuntu@<reserved-ip>` (default user for Ubuntu OCI images is `ubuntu`) — confirm you're in
+- [x] `ssh -i ~/.ssh/ollive_oracle_ed25519 ubuntu@144.24.101.70` — confirmed working (used earlier to check instance metadata)
 - [ ] Install k3s: `curl -sfL https://get.k3s.io | sh -`
 - [ ] Confirm it's running: `sudo k3s kubectl get nodes` (should show one `Ready` node)
 - [ ] This also installs **Traefik** (ingress) and the **local-path** storage class — no separate install needed for either
@@ -128,6 +124,8 @@ OCI Console → **Networking → Virtual Cloud Networks** → your VCN → **Sec
 
 ## Status
 
-- **Started**: _(date)_
-- **Current step**: A
-- **Blockers**: none yet
+- **Started**: 2026-08-16
+- **Current step**: D (open the firewall) — SSH (step F's connectivity) already confirmed working while troubleshooting step B
+- **Instance**: `144.24.101.70`, `VM.Standard.E2.4` (4 OCPU/32GB x86, trial billing, $5 budget alert active), `ap-mumbai-1-AD-1`
+- **Cleanup pending**: terminate unused `161.118.184.11` (wrong-shape first attempt)
+- **Blockers**: none currently — Ampere A1 capacity issue was worked around by switching to a paid trial x86 shape
