@@ -369,3 +369,19 @@ Verified end-to-end, not just via pytest: ran `uv sync` (49 packages), ran the n
 **Context**: Small standalone addition on `main`, not tied to a specific unit's Construction gate — pure developer-experience tooling.
 
 ---
+
+## Unit 3 - Construction Kickoff
+**Timestamp**: 2026-08-16T12:20:00Z
+**User Input**: "Let's proceed further."
+**AI Response**: Created branch `unit/03-ingestion-pipeline`. Assessed per-unit stages: Functional Design=EXECUTE, NFR Requirements/Design=EXECUTE, Infrastructure Design=SKIP. Created `construction/plans/unit-03-ingestion-pipeline-functional-design-plan.md` with 5 questions: PayloadValidator's actual responsibility (given LogEvent is already pydantic-typed), MetadataExtractor's actual responsibility, PII redaction pattern/denylist mechanism, worker startup/shutdown lifecycle, and the dead-letter mechanism flagged back in Unit 1's BR9.
+**Context**: Unit 3, Functional Design stage, planning.
+
+---
+
+## Unit 3 - Functional Design Answered & Artifacts Generated
+**Timestamp**: 2026-08-16T12:30:00Z
+**User Input**: "Skip question one and two, like we don't need to validate and don't need for now anything we extract. We will do hardcotted rex plus constructor based denial list may keep it construct a pass for now, we can decide for that later. Worker, life cycle, started your faster, where lifespan? A failed log events table would be good for dead litter mechanism."
+**AI Response**: Recorded Q1/Q2 as pass-through stages (kept, not deleted, preserving Application Design's 4-stage decision), Q3=A (hardcoded regex + constructor denylist), Q4=A (FastAPI lifespan), Q5=A (failed_log_events table). Caught and resolved a real tension in Q5: dead-lettering the original event on a pre-redaction failure could write unredacted PII to durable storage, contradicting US-3.2. Resolved by having FailedLogEvent omit preview text entirely - metadata only. Generated domain-entities.md (InProcessEventQueue with put_nowait for non-blocking-under-backpressure, pipeline stage specs, FailedLogEvent/FailedLogEventRepository), business-rules.md (7 rules including the new BR-PII), and business-logic-model.md (full worker/stage logic, worker lifecycle via FastAPI lifespan, the one-line NoOpEventQueue-to-InProcessEventQueue swap anticipated back in Unit 2).
+**Context**: Unit 3, Functional Design stage complete.
+
+---
