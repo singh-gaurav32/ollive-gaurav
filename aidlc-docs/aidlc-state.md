@@ -42,7 +42,7 @@
 - **Unit 3 — Ingestion Pipeline Hardening** — MERGED to `main` (48/48 tests, verified end-to-end through the live API with a real Gemini error flowing all the way to a `logs` row)
 - **Unit 4 — Observability Dashboard** — MERGED to `main` (53/53 tests, verified end-to-end against the live API including the bucket-count cap)
 - **Unit 5 — Frontend Application + Auth/Isolation** — MERGED to `main` (74 automated tests, 4 real bugs found and fixed via live browser verification, multi-user isolation verified two ways)
-- **Unit 6 (Packaging & Deployment)** — NFR Requirements, NFR Design, Infrastructure Design, and Code Generation all complete and **approved by the user**. Docker Compose `frontend` service, full `k8s/` manifest set for k3s on Oracle Cloud, README deployment docs. Verified locally end-to-end via live browser check through the Compose stack. **Not yet merged to `main`** (on `unit/06-packaging-deployment` branch — awaiting explicit merge confirmation, per the pattern used for Units 1-5). Cloud deployment itself (Oracle VM provisioning, `kubectl apply`) not yet executed — awaiting the user's account/VM setup.
+- **Unit 6 — Packaging & Deployment** — MERGED to `main` (Docker Compose `frontend` service, full `k8s/` manifest set for k3s on Oracle Cloud, README deployment docs; verified end-to-end locally via live browser check through the Compose stack — session persistence, SSE streaming, SPA routing, dashboard). Cloud deployment itself (Oracle VM provisioning, `kubectl apply`) not yet executed — awaiting the user's account/VM setup, documented step-by-step in `README.md`.
 - [ ] Build and Test (after all units complete)
 
 ### 🟡 OPERATIONS PHASE
@@ -50,6 +50,6 @@
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION
-- **Current Stage**: Unit 6 Code Generation complete, awaiting user approval to proceed
-- **Next Stage**: Merge Unit 6 to `main`, then Build and Test (final stage before all units complete)
-- **Status**: Awaiting user review/approval of Unit 6's generated code
+- **Current Stage**: All 6 units merged to `main`
+- **Next Stage**: Build and Test (final construction stage, runs across the whole system now that all units are complete)
+- **Status**: Awaiting direction to start Build and Test

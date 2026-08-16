@@ -740,3 +740,12 @@ Cloud deployment (provisioning the Oracle VM, `kubectl apply`) is documented in 
 **Context**: Unit 6 Code Generation approved. Unit 6 is the final unit (6 of 6) - following the precedent set by Units 1-5 (each merged to `main` right after its own Code Generation + live verification passed, before the top-level Build and Test phase), asking the user to confirm the merge of `unit/06-packaging-deployment` to `main` next, rather than assuming "continue to next stage" also authorizes the merge (matches Unit 5's pattern, where merge was a separate explicit confirmation).
 
 ---
+
+## Unit 6 - Merged, All Units Complete
+**Timestamp**: 2026-08-16T19:40:00Z
+**User Input**: "Yes, go ahead and merge it."
+**Status**: Approved
+**AI Response**: Committed Unit 6's work in four stage-aligned commits (NFR requirements, NFR design, infrastructure design, implementation) on `unit/06-packaging-deployment`, then merged into `main` with `--no-ff` (25 files, +855/-5). All 6 units are now merged to `main`. Next stage is the top-level Build and Test phase (runs once across the whole system, distinct from each unit's own live verification already performed during its Code Generation stage).
+**Context**: Unit 6 complete. Session awaiting direction on Build and Test.
+
+---
