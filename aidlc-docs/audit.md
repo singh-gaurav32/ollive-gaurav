@@ -749,3 +749,18 @@ Cloud deployment (provisioning the Oracle VM, `kubectl apply`) is documented in 
 **Context**: Unit 6 complete. Session awaiting direction on Build and Test.
 
 ---
+
+## Build and Test Stage
+**Timestamp**: 2026-08-16T20:10:00Z
+**User Input**: "Yes, go ahead with Build and Test."
+**Build Status**: Success
+**Test Status**: Pass
+**AI Response**: Executed (not just documented) a full build-and-test pass against `main` @ `f5823ff`: `docker-compose build` for all services (clean), backend `pytest` (57 fast + 8 real-Postgres = 65/65), frontend `vitest` + `tsc -b` (9/9, clean typecheck), then recreated the api/frontend containers from the fresh build and ran 3 live cross-unit integration scenarios through the browser (chat→ingestion→dashboard data flow, multi-user isolation with a real 404 on cross-user access, full stack through Unit 6's nginx proxy rather than raw service calls) — all passed. Performance testing marked N/A with rationale (no requirements ever defined for this demo-scale project) rather than fabricated.
+**Files Generated**:
+- build-instructions.md
+- unit-test-instructions.md
+- integration-test-instructions.md
+- performance-test-instructions.md
+- build-and-test-summary.md
+
+---

@@ -43,13 +43,13 @@
 - **Unit 4 — Observability Dashboard** — MERGED to `main` (53/53 tests, verified end-to-end against the live API including the bucket-count cap)
 - **Unit 5 — Frontend Application + Auth/Isolation** — MERGED to `main` (74 automated tests, 4 real bugs found and fixed via live browser verification, multi-user isolation verified two ways)
 - **Unit 6 — Packaging & Deployment** — MERGED to `main` (Docker Compose `frontend` service, full `k8s/` manifest set for k3s on Oracle Cloud, README deployment docs; verified end-to-end locally via live browser check through the Compose stack — session persistence, SSE streaming, SPA routing, dashboard). Cloud deployment itself (Oracle VM provisioning, `kubectl apply`) not yet executed — awaiting the user's account/VM setup, documented step-by-step in `README.md`.
-- [ ] Build and Test (after all units complete)
+- [x] Build and Test — **complete**: 74/74 automated unit tests passing (65 backend + 9 frontend), 3/3 cross-unit integration scenarios verified live against a fresh build of `main`, performance testing explicitly N/A (no requirements defined). See `aidlc-docs/construction/build-and-test/build-and-test-summary.md`.
 
 ### 🟡 OPERATIONS PHASE
 - [ ] Operations — PLACEHOLDER
 
 ## Current Status
-- **Lifecycle Phase**: CONSTRUCTION
-- **Current Stage**: All 6 units merged to `main`
-- **Next Stage**: Build and Test (final construction stage, runs across the whole system now that all units are complete)
-- **Status**: Awaiting direction to start Build and Test
+- **Lifecycle Phase**: CONSTRUCTION complete → OPERATIONS (placeholder)
+- **Current Stage**: Build and Test complete, all 6 units merged and verified
+- **Next Stage**: Operations is a placeholder in this project's workflow; the practical next step is the user provisioning the Oracle Cloud VM and running the README's cloud deployment walkthrough
+- **Status**: System fully built, tested, and merged to `main`. Awaiting the user's decision on when to provision the live Oracle Cloud deployment.
