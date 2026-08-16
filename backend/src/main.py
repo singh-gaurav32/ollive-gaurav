@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from api.chat_router import router as chat_router
+from api.dashboard_router import router as dashboard_router
 from api.deps import get_ingestion_worker
 
 logger = logging.getLogger(__name__)
@@ -39,6 +40,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Ollive - LLM Inference Logging & Ingestion System", lifespan=lifespan)
 app.include_router(chat_router)
+app.include_router(dashboard_router)
 
 
 @app.get("/health")

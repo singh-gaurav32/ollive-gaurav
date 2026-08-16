@@ -14,6 +14,7 @@ from __future__ import annotations
 import os
 from functools import lru_cache
 
+from analytics.service import AnalyticsService
 from chat.service import ChatService
 from chat.truncation import WindowTruncationStrategy
 from db.engine import session_factory
@@ -64,6 +65,11 @@ def get_ingestion_worker() -> IngestionWorker:
         persister=LogPersister(log_repo),
         failed_log_event_repository=failed_repo,
     )
+
+
+@lru_cache
+def get_analytics_service() -> AnalyticsService:
+    return AnalyticsService(SqlAlchemyLogRepository(session_factory))
 
 
 @lru_cache

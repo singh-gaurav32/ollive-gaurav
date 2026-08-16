@@ -38,28 +38,22 @@
 
 ### 🟢 CONSTRUCTION PHASE
 - **Unit 1 — Provider Abstraction & Auto-Instrumentation** — MERGED to `main`
-- **Unit 2 — Chatbot Spine** (branch: `unit/02-chatbot-spine`)
-  - [x] Functional Design (conversation lifecycle, truncation Strategy, chat flow)
-  - [x] NFR Requirements (SQLAlchemy 2.0 async + asyncpg, Alembic, docker-compose.yml started now, no hard latency SLA)
-  - [x] NFR Design (fail-fast startup, session-per-operation, ORM/pydantic split, Alembic env, Compose postgres service)
-  - [x] Infrastructure Design — SKIP (real cloud infra mapping is Unit 6's job; local Postgres for dev decided as part of NFR)
-  - [x] Code Generation (33/33 tests passing, verified end-to-end via real Docker Compose stack)
-- **Unit 2 — MERGED to `main`**
-- [ ] Units 3-6 — not yet started
-
-## Unit 3 — Ingestion Pipeline Hardening (branch: `unit/03-ingestion-pipeline`)
-- [x] Functional Design (pipeline stages, redaction, worker lifecycle, dead-letter mechanism with PII-safe design)
-- [x] NFR Requirements (let worker die loudly on unexpected crash, no logs indexes yet — deferred to Unit 4)
-- [x] NFR Design (asyncio task done_callback for crash visibility, component layout)
-- [x] Infrastructure Design — SKIP (no infra changes this unit)
-- [x] Code Generation (48/48 tests passing, verified end-to-end through the live API with a real Gemini error flowing all the way to a `logs` row — awaiting approval to merge)
-- [ ] Build and Test
+- **Unit 2 — Chatbot Spine** — MERGED to `main` (33/33 tests, verified end-to-end via real Docker Compose stack)
+- **Unit 3 — Ingestion Pipeline Hardening** — MERGED to `main` (48/48 tests, verified end-to-end through the live API with a real Gemini error flowing all the way to a `logs` row)
+- **Unit 4 — Observability Dashboard** (branch: `unit/04-observability-dashboard`)
+  - [x] Functional Design (unified `/metrics` endpoint, defaults/validation, aggregate access scope)
+  - [x] NFR Requirements (timestamp-only index, bucket-count cap at 10,000)
+  - [x] NFR Design (index as its own migration, cap as an API-boundary check)
+  - [x] Infrastructure Design — SKIP (no infra changes this unit)
+  - [x] Code Generation (53/53 tests passing, verified end-to-end against the live API including the bucket-count cap — awaiting approval to merge)
+- [ ] Units 5-6 — not yet started
+- [ ] Build and Test (after all units complete)
 
 ### 🟡 OPERATIONS PHASE
 - [ ] Operations — PLACEHOLDER
 
 ## Current Status
-- **Lifecycle Phase**: INCEPTION
-- **Current Stage**: Workflow Planning — execution plan drafted
-- **Next Stage**: Application Design (pending approval)
-- **Status**: Awaiting user approval of `inception/plans/execution-plan.md`
+- **Lifecycle Phase**: CONSTRUCTION
+- **Current Stage**: Unit 4 (Observability Dashboard) — Code Generation complete, awaiting merge approval
+- **Next Stage**: Merge Unit 4, then Unit 5 (Frontend Application + Auth/Isolation)
+- **Status**: In progress
