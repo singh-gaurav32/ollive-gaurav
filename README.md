@@ -1,6 +1,8 @@
 # Ollive — LLM Inference Logging & Ingestion System
 
-Built incrementally via AI-DLC. See `aidlc-docs/` for the full requirements, design, and decision trail behind every choice below.
+A chatbot with an auto-instrumented logging layer: every LLM call is captured, validated, PII-redacted, and persisted through an event-driven ingestion pipeline, with an observability dashboard (latency/throughput/error-rate) built on top. See [`docs/architecture-notes.md`](docs/architecture-notes.md) for the ingestion flow, logging strategy, scaling considerations, and failure handling assumptions in detail.
+
+**Live demo**: https://gaurav-ollive.duckdns.org (seeded demo users, no password — see below)
 
 ## Getting Started (Backend)
 
@@ -55,7 +57,7 @@ npm run dev              # http://localhost:5173
 npm run test              # Vitest + React Testing Library
 ```
 
-The backend must be running (see above) with `ALLOWED_ORIGINS` including `http://localhost:5173` (the default) for the frontend to reach it — CORS, not a dev proxy, is used (see `aidlc-docs/construction/unit-05-frontend-auth/nfr-requirements/`).
+The backend must be running (see above) with `ALLOWED_ORIGINS` including `http://localhost:5173` (the default) for the frontend to reach it — CORS, not a dev proxy, is used, since the same setup needs to keep working once frontend and backend are genuinely different origins (as in the k3s deployment, before nginx unifies them behind one proxy).
 
 On first run, log in as one of the seeded demo users (`alice`, `bob`, `carol`) — no password.
 
@@ -71,7 +73,7 @@ open http://localhost:8080  # frontend, proxying auth/chat/dashboard calls to th
 
 ## Deployment (Cloud — k3s on Oracle Cloud)
 
-Full design and rationale: `aidlc-docs/construction/unit-06-packaging-deployment/`. Summary of the steps to take a clean Oracle Cloud "Always Free" account to a live, public HTTPS URL:
+Steps to take a clean Oracle Cloud account to a live, public HTTPS URL (this is exactly how the live demo above is running):
 
 **1. Provision the VM** (OCI Console → Compute → Instances → Create):
 - Shape: **Ampere A1 Flex**, 4 OCPU / 24GB RAM (the full Always Free allocation)
@@ -98,7 +100,7 @@ sudo k3s kubectl apply -f https://github.com/cert-manager/cert-manager/releases/
 sudo k3s kubectl -n cert-manager rollout status deploy/cert-manager
 ```
 
-**7. Build and push the images to a registry** (GHCR — GitHub Container Registry — recommended over building on the VM: no Docker install needed there, and updates become rebuild-and-push instead of SSH-and-rebuild; see `aidlc-docs/operations/oracle-vm-provisioning-checklist.md` for the full rationale):
+**7. Build and push the images to a registry** (GHCR — GitHub Container Registry. Note: cross-compiling `linux/amd64` images from an Apple Silicon Mac needs `buildx`+QEMU set up; if that's not available, build directly on the target VM instead — same commands, just run there):
 ```bash
 docker login ghcr.io -u <your-github-username>   # run this yourself, don't paste tokens into a shared session
 docker build -t ghcr.io/<your-github-username>/ollive-api:latest ./backend
@@ -132,17 +134,62 @@ sudo k3s kubectl -n ollive get certificate   # wait for READY=True (Let's Encryp
 ```
 Then visit `https://YOUR-SUBDOMAIN.duckdns.org`.
 
-**Updating after changes**: repeat step 7's build/import for whichever image changed, then `sudo k3s kubectl -n ollive rollout restart deployment/api` (or `deployment/frontend`). No CI/CD — this is a manual, single-VM demo deployment by design (see NFR Requirements).
+**Updating after changes**: repeat step 7's build/push for whichever image changed, then `sudo k3s kubectl -n ollive rollout restart deployment/api` (or `deployment/frontend`). No CI/CD — this is a manual, single-VM demo deployment by design.
 
-## Status
+## Architecture Overview
 
-This README grows as each unit of work lands.
+```
+Browser (React SPA)
+   |  session cookie auth
+   v
+FastAPI backend
+   |-- auth/         session-based auth, seeded demo users, no passwords
+   |-- chat/         conversation lifecycle, context truncation, streaming + cancel
+   |-- provider/     LLMProvider interface -> GeminiProvider, wrapped by
+   |                 InstrumentedProvider (auto-captures a LogEvent per call,
+   |                 zero manual logging calls elsewhere)
+   |-- events/       in-process async queue (InProcessEventQueue)
+   |-- ingestion/    IngestionWorker (background asyncio task, same process):
+   |                 validate -> extract -> redact -> persist, dead-letters
+   |                 failures instead of dropping or crashing the loop
+   |-- api/          routers: auth, conversations (chat), dashboard (/metrics)
+   `-- db/           SQLAlchemy repositories + Alembic migrations
+   |
+   v
+PostgreSQL (+ pgvector extension provisioned, unused - see Tradeoffs)
+```
 
-- **Unit 1 — Provider Abstraction & Auto-Instrumentation** (done): `backend/src/provider/` — the `LLMProvider` interface, `GeminiProvider` adapter, and the `InstrumentedProvider` auto-instrumentation decorator. See `aidlc-docs/construction/unit-01-provider-abstraction/`.
-- **Unit 2 — Chatbot Spine** (done): `backend/src/chat/` (conversation lifecycle, context truncation, streaming orchestration), `backend/src/db/` (SQLAlchemy repositories + Alembic migrations), `backend/src/api/` (chat endpoints, manually verifiable — no frontend yet). `docker-compose.yml` and the `postgres`/`api` services started here. See `aidlc-docs/construction/unit-02-chatbot-spine/`.
-- **Unit 3 — Ingestion Pipeline Hardening** (done): `backend/src/events/in_process_event_queue.py` (the real event broker, replacing Unit 2's temporary no-op stand-in), `backend/src/ingestion/` (validate → extract → redact → persist pipeline, PII redaction, dead-lettering), `logs` + `failed_log_events` tables. Verified end-to-end through the live API, not just unit tests. See `aidlc-docs/construction/unit-03-ingestion-pipeline/`.
-- **Unit 4 — Observability Dashboard** (done): `GET /metrics` — latency (p50/p95), throughput, and error-rate buckets over `logs`, with sensible defaults and a cap against runaway queries. Backend only — the dashboard UI is Unit 5. See `aidlc-docs/construction/unit-04-observability-dashboard/`.
-- **Unit 5 — Frontend Application + Auth/Isolation** (done): the full React SPA (login, chat with streaming/cancel, conversation list/resume, dashboard), plus real session-based auth (`backend/src/auth/`) replacing Unit 2's seeded-user stub. Multi-user isolation verified live: a second user sees zero conversations, and direct-URL access to another user's conversation returns a real `404` from the backend, not a UI-level hide. See `aidlc-docs/construction/unit-05-frontend-auth/`.
-- **Unit 6 — Packaging & Deployment** (done): `frontend/Dockerfile` + `frontend/nginx.conf` (nginx-served frontend, reverse-proxying the backend's real route groups — `/auth`, `/conversations`, `/metrics`, `/health` — with SSE streaming left unbuffered), `docker-compose.yml`'s new `frontend` service for one-command local setup, and the full `k8s/` manifest set for a self-hosted k3s deployment on Oracle Cloud (Ampere A1 Free Tier, Traefik ingress, cert-manager + Let's Encrypt, DuckDNS). Local Compose stack verified live end-to-end (proxy routing, SSE streaming, SPA client-side routing, dashboard). See `aidlc-docs/construction/unit-06-packaging-deployment/`.
+Frontend (`frontend/`) is a Vite/React SPA: login, chat with streaming responses and mid-stream cancel, conversation list/resume, and the observability dashboard. Deployment (`docker-compose.yml` / `k8s/`) packages `postgres`, `api` (worker runs in-process inside it, not a separate service), and `frontend` (its own nginx container that also reverse-proxies API calls) — the same three-service shape locally and on the live k3s deployment.
 
-More sections (architecture overview, schema design, tradeoffs) will be added as the final polished README is assembled — the cloud deployment itself (provisioning the VM, `kubectl apply`) is documented above and still to be executed on the real Oracle Cloud account.
+See [`docs/architecture-notes.md`](docs/architecture-notes.md) for the ingestion flow, logging strategy, scaling considerations, and failure handling assumptions.
+
+## Schema Design
+
+- **`users`** — `id`, `username` (unique), `created_at`. No password column — auth is pick-a-seeded-user for demo purposes (see Tradeoffs).
+- **`sessions`** — `id`, `user_id` (FK), `created_at`, indexed on `user_id`. Backs the session cookie; a session row existing and matching the cookie is the entire auth check.
+- **`conversations`** — `id`, `user_id` (FK), `state` (`active`/`cancelled`), timestamps, indexed on `user_id` (every list-conversations query filters by user).
+- **`messages`** — `id`, `conversation_id` (FK), `role` (`user`/`assistant`), `content`, `created_at`, indexed on `conversation_id`.
+- **`logs`** — the inference log table: `model`, `provider`, `latency_ms`, `ttft_ms` (nullable, streaming only), `input_tokens`/`output_tokens` (nullable), `timestamp` (indexed — the dashboard's every query filters/sorts on this), `status` (`success`/`error`/`cancelled`), `error_message`, `conversation_id`, `session_id`, `input_preview`/`output_preview` (post-redaction), `extra` (JSONB catch-all for provider-specific fields, e.g. `finish_reason`).
+- **`failed_log_events`** — the dead-letter table: `model`, `provider`, `conversation_id`, `session_id`, `timestamp`, `failure_stage` (which of validate/extract/redact/persist failed), `failure_reason`. Deliberately **no** preview fields — a pipeline failure before redaction completes must never risk persisting unredacted text.
+
+`conversations`/`messages` (the chat data) and `logs`/`failed_log_events` (the observability data) are separate table families joined only loosely by `conversation_id`/`session_id` — a conversation can be fully reconstructed from `messages` alone even if every one of its `logs` rows were deleted, and vice versa. This was a deliberate boundary: chat functionality and observability shouldn't have a hard dependency on each other's schema.
+
+## Tradeoffs
+
+- **In-process event queue, not a real broker** (Redis/Kafka/SQS) — zero extra infrastructure for a demo-scale system, at the cost of events being lost on a process crash and no cross-process fan-out. The `EventQueue` interface boundary already exists to swap this later without touching `IngestionWorker` or `InstrumentedProvider`.
+- **Ingestion worker runs in-process inside the API**, not as a separate service/container — one fewer moving part in `docker-compose.yml`/`k8s/`, at the cost of the API and ingestion sharing fate (a worker crash is caught and logged loudly, but the process itself is shared).
+- **Window-based context truncation** (last 10 turns, hard cutoff) instead of summarization — simple, predictable token cost, at the cost of the model losing older context outright rather than gracefully.
+- **Session-based demo auth, no passwords** — pick-a-seeded-user is enough to demonstrate real per-user data isolation (verified live: a second user sees zero conversations, and direct-URL access to another user's conversation returns a genuine backend `404`, not a UI-level hide) without building credential management that adds no value to what's being evaluated here.
+- **pgvector extension provisioned but unused** — infrastructure headroom for a possible future retrieval/RAG feature; no vector-search requirement exists in this scope, so no vector columns exist yet either.
+- **Hand-mirrored TypeScript types** (`frontend/src/types.ts`) instead of a codegen step from the backend's Pydantic models — no extra build tooling, at the cost of manual upkeep if a backend field changes.
+- **No container registry originally planned, GHCR used in practice** — building directly on the deployment VM seemed simplest for a single-node cluster, but once a GitHub repo was already in play for the code, pushing images to GHCR turned out simpler in practice (images survive VM rebuilds, updates are `rebuild → push → rollout restart` instead of `SSH → rebuild → reimport`).
+- **Single-node k3s, no HA** — deliberate: this satisfies "self-hosted k8s" for a demo, not a production SLA. No autoscaling, no multi-replica, no automated Postgres backup beyond what the PVC itself protects against (pod restarts, not VM loss).
+
+## What I'd Improve With More Time
+
+- **Multi-provider support** — `LLMProvider` is already provider-agnostic by design (that's the whole point of the interface + `InstrumentedProvider` decorator), but only `GeminiProvider` is actually implemented. A second provider (OpenAI/Claude) would be close to a drop-in addition.
+- **Dashboard filter controls** — the backend already supports `bucket_size_seconds`/`start`/`end` query params on `GET /metrics`, but the frontend never exposes them; it's always the last-1h/60s default.
+- **No output token cap or rate limiting on LLM calls** — a very long response or a request flood has no guardrail today beyond whatever Google's own API enforces.
+- **No visible error toast on a failed chat send** — the app recovers correctly (input stays usable, no crash) but silently; a user has no in-UI signal that their message failed versus is still streaming.
+- **No automated Postgres backup** for the live deployment — acceptable for a demo, not for anything meant to persist real data long-term.
+- **No drill-down from the dashboard into individual failing requests** — `logs.error_message` captures real detail per row (this is exactly what caught two real Gemini model-deprecation errors during actual deployment), but there's no UI or endpoint to browse it; only the aggregate counts are surfaced.
