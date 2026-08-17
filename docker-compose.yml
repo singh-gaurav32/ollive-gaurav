@@ -20,6 +20,11 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://ollive:ollive@postgres:5432/ollive
       GEMINI_API_KEY: ${GEMINI_API_KEY}
+      # Plain HTTP locally (localhost:8080/8000, no TLS) - without this the
+      # browser would silently refuse to store the Secure session cookie,
+      # breaking login. Real deployments (k3s + cert-manager) are HTTPS and
+      # don't set this, so they get the safer Secure-by-default behavior.
+      SESSION_COOKIE_SECURE: "false"
     ports:
       - "8000:8000"
     depends_on:

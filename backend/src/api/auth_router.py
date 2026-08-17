@@ -6,7 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel
 
-from auth import SESSION_COOKIE_NAME, AuthService, UserNotFoundError
+from auth import SESSION_COOKIE_NAME, AuthService, UserNotFoundError, session_cookie_is_secure
 
 from .deps import AuthContext, get_auth_context, get_auth_service
 
@@ -38,6 +38,7 @@ async def login(
         value=str(session.id),
         httponly=True,
         samesite="lax",
+        secure=session_cookie_is_secure(),
     )
     user = await auth_service.validate_session(session.id)
     return user
@@ -55,7 +56,7 @@ async def logout(
             await auth_service.logout(UUID(raw_session_id))
         except ValueError:
             pass  # malformed cookie value - nothing to delete server-side
-    response.delete_cookie(SESSION_COOKIE_NAME)
+    response.delete_cookie(SESSION_COOKIE_NAME, httponly=True, samesite="lax", secure=session_cookie_is_secure())
     return {"status": "logged out"}
 
 
