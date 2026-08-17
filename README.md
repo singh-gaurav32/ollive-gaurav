@@ -44,6 +44,11 @@ Environment variables — root `.env` (for `docker compose`, see `.env.example`)
 DATABASE_URL=postgresql+asyncpg://ollive:ollive@localhost:5432/ollive
 GEMINI_API_KEY=your-key-here
 GEMINI_MAX_OUTPUT_TOKENS=2048   # optional, caps worst-case response length/cost; this is the default
+
+# Multi-provider (optional) - defaults to gemini if unset:
+# LLM_PROVIDER=openai
+# OPENAI_API_KEY=your-key-here
+# LLM_MAX_OUTPUT_TOKENS=2048    # applies to whichever provider is active
 ```
 
 ## Getting Started (Frontend)
@@ -146,9 +151,10 @@ Browser (React SPA)
 FastAPI backend
    |-- auth/         session-based auth, seeded demo users, no passwords
    |-- chat/         conversation lifecycle, context truncation, streaming + cancel
-   |-- provider/     LLMProvider interface -> GeminiProvider, wrapped by
-   |                 InstrumentedProvider (auto-captures a LogEvent per call,
-   |                 zero manual logging calls elsewhere)
+   |-- provider/     LLMProvider interface -> GeminiProvider / OpenAIProvider
+   |                 (LLM_PROVIDER env var selects, defaults to gemini),
+   |                 wrapped by InstrumentedProvider (auto-captures a
+   |                 LogEvent per call, zero manual logging elsewhere)
    |-- events/       in-process async queue (InProcessEventQueue)
    |-- ingestion/    IngestionWorker (background asyncio task, same process):
    |                 validate -> extract -> redact -> persist, dead-letters
@@ -185,12 +191,12 @@ See [`docs/architecture-notes.md`](docs/architecture-notes.md) for the ingestion
 - **Hand-mirrored TypeScript types** (`frontend/src/types.ts`) instead of a codegen step from the backend's Pydantic models — no extra build tooling, at the cost of manual upkeep if a backend field changes.
 - **No container registry originally planned, GHCR used in practice** — building directly on the deployment VM seemed simplest for a single-node cluster, but once a GitHub repo was already in play for the code, pushing images to GHCR turned out simpler in practice (images survive VM rebuilds, updates are `rebuild → push → rollout restart` instead of `SSH → rebuild → reimport`).
 - **Single-node k3s, no HA** — deliberate: this satisfies "self-hosted k8s" for a demo, not a production SLA. No autoscaling, no multi-replica, no automated Postgres backup beyond what the PVC itself protects against (pod restarts, not VM loss).
+- **`max_output_tokens` default of 2048, not a smaller number** — `gemini-3-flash-preview`'s internal "thinking" tokens count against the same budget as visible output; testing against the real API showed a small cap (~20) can be entirely consumed by thinking, leaving no room for actual response text. 2048 leaves real headroom, confirmed live rather than assumed.
 
 ## What I'd Improve With More Time
 
-- **Multi-provider support** — `LLMProvider` is already provider-agnostic by design (that's the whole point of the interface + `InstrumentedProvider` decorator), but only `GeminiProvider` is actually implemented. A second provider (OpenAI/Claude) would be close to a drop-in addition.
-- **Dashboard filter controls** — the backend already supports `bucket_size_seconds`/`start`/`end` query params on `GET /metrics`, but the frontend never exposes them; it's always the last-1h/60s default.
-- **No output token cap or rate limiting on LLM calls** — a very long response or a request flood has no guardrail today beyond whatever Google's own API enforces.
+- **`OpenAIProvider` is unit-tested against a mocked client only, not verified against the real OpenAI API** — no chargeable API key was available to run it live the way `GeminiProvider` was (see Tradeoffs). The adapter follows the exact same shape/error-handling as the Gemini one and the interface contract is enforced by `LLMProvider`, but "the code looks right" and "confirmed against the real API" are different claims — this one only has the former.
+- **No rate limiting on LLM calls** — `max_output_tokens` now bounds worst-case response length/cost (see Tradeoffs), but nothing stops rapid repeated requests. A provider-level or per-user rate limit would need adding.
 - **No visible error toast on a failed chat send** — the app recovers correctly (input stays usable, no crash) but silently; a user has no in-UI signal that their message failed versus is still streaming.
 - **No automated Postgres backup** for the live deployment — acceptable for a demo, not for anything meant to persist real data long-term.
 - **No drill-down from the dashboard into individual failing requests** — `logs.error_message` captures real detail per row (this is exactly what caught two real Gemini model-deprecation errors during actual deployment), but there's no UI or endpoint to browse it; only the aggregate counts are surfaced.

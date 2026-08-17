@@ -37,6 +37,26 @@ from ingestion.pii_redactor import PIIRedactor
 from ingestion.worker import IngestionWorker
 from provider.gemini_provider import GeminiProvider
 from provider.instrumented_provider import InstrumentedProvider
+from provider.interface import LLMProvider
+from provider.openai_provider import OpenAIProvider
+
+_MAX_OUTPUT_TOKENS = int(os.environ.get("LLM_MAX_OUTPUT_TOKENS", os.environ.get("GEMINI_MAX_OUTPUT_TOKENS", "2048")))
+
+
+def _build_provider() -> tuple[LLMProvider, str]:
+    """LLM_PROVIDER selects the concrete adapter - see provider/README-shaped
+    module docstrings for why this swap requires no changes anywhere else
+    (chat logic, ingestion, dashboard, frontend)."""
+    provider_name = os.environ.get("LLM_PROVIDER", "gemini").lower()
+    if provider_name == "openai":
+        return (
+            OpenAIProvider(api_key=os.environ["OPENAI_API_KEY"], max_output_tokens=_MAX_OUTPUT_TOKENS),
+            "openai",
+        )
+    return (
+        GeminiProvider(api_key=os.environ["GEMINI_API_KEY"], max_output_tokens=_MAX_OUTPUT_TOKENS),
+        "gemini",
+    )
 
 
 @lru_cache
@@ -48,11 +68,8 @@ def get_event_queue() -> InProcessEventQueue:
 def get_chat_service() -> ChatService:
     conversation_repo = SqlAlchemyConversationRepository(session_factory)
     message_repo = SqlAlchemyMessageRepository(session_factory)
-    gemini = GeminiProvider(
-        api_key=os.environ["GEMINI_API_KEY"],
-        max_output_tokens=int(os.environ.get("GEMINI_MAX_OUTPUT_TOKENS", "2048")),
-    )
-    instrumented = InstrumentedProvider(gemini, get_event_queue(), provider_name="gemini")
+    provider, provider_name = _build_provider()
+    instrumented = InstrumentedProvider(provider, get_event_queue(), provider_name=provider_name)
     return ChatService(
         instrumented_provider=instrumented,
         conversation_repository=conversation_repo,
