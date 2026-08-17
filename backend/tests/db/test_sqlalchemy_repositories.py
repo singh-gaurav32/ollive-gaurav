@@ -76,7 +76,7 @@ def failed_log_repo(factory):
 
 
 async def test_create_and_get_conversation(user_repo, conversation_repo):
-    user = await user_repo.get_or_create_seed_user()
+    user = await user_repo.create_user(f"test-{uuid4()}")
     conversation = await conversation_repo.create(user.id)
 
     fetched = await conversation_repo.get(conversation.id, user.id)
@@ -87,7 +87,7 @@ async def test_create_and_get_conversation(user_repo, conversation_repo):
 
 
 async def test_get_is_scoped_to_owner(user_repo, conversation_repo):
-    user = await user_repo.get_or_create_seed_user()
+    user = await user_repo.create_user(f"test-{uuid4()}")
     other_user_id = uuid4()
     conversation = await conversation_repo.create(user.id)
 
@@ -97,7 +97,7 @@ async def test_get_is_scoped_to_owner(user_repo, conversation_repo):
 
 
 async def test_update_state_persists(user_repo, conversation_repo):
-    user = await user_repo.get_or_create_seed_user()
+    user = await user_repo.create_user(f"test-{uuid4()}")
     conversation = await conversation_repo.create(user.id)
 
     await conversation_repo.update_state(conversation.id, "cancelled")
@@ -108,7 +108,7 @@ async def test_update_state_persists(user_repo, conversation_repo):
 
 
 async def test_message_append_and_list_in_order(user_repo, conversation_repo, message_repo):
-    user = await user_repo.get_or_create_seed_user()
+    user = await user_repo.create_user(f"test-{uuid4()}")
     conversation = await conversation_repo.create(user.id)
 
     await message_repo.append(conversation.id, "user", "hi")
@@ -118,13 +118,6 @@ async def test_message_append_and_list_in_order(user_repo, conversation_repo, me
 
     assert [m.role for m in messages] == ["user", "assistant"]
     assert [m.content for m in messages] == ["hi", "hello"]
-
-
-async def test_seed_user_is_idempotent(user_repo):
-    first = await user_repo.get_or_create_seed_user()
-    second = await user_repo.get_or_create_seed_user()
-
-    assert first.id == second.id
 
 
 async def test_log_insert_and_query_window_aggregates_correctly(log_repo):

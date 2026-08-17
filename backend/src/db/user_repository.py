@@ -1,7 +1,5 @@
 """UserRepository: shared persistence contract for demo users and sessions.
-Unit 2 implements only get_or_create_seed_user() for its stand-in user;
-Unit 5 completes the interface with real login/session validation. See
-the cross-cutting schema decision in unit-of-work.md.
+See the cross-cutting schema decision in unit-of-work.md.
 """
 from __future__ import annotations
 
@@ -21,15 +19,8 @@ class UserRepository(ABC):
         validate_session."""
 
     @abstractmethod
-    async def get_or_create_seed_user(self) -> User:
-        """Unit 2's stand-in for real auth - superseded by Unit 5's real
-        login flow. No longer called by anything once Unit 5 lands; left
-        in the interface as historical record rather than removed."""
-
-    @abstractmethod
     async def create_user(self, username: str) -> User:
-        """Unit 5: used by demo-user seeding at startup for an arbitrary
-        username, generalizing get_or_create_seed_user's single-user idiom."""
+        """Unit 5: used by demo-user seeding at startup."""
 
     @abstractmethod
     async def list_users(self) -> list[User]:

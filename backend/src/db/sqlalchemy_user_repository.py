@@ -10,8 +10,6 @@ from .models import Session, User
 from .orm import SessionORM, UserORM
 from .user_repository import UserRepository
 
-SEED_USERNAME = "demo"
-
 
 class SqlAlchemyUserRepository(UserRepository):
     def __init__(self, session_factory: async_sessionmaker) -> None:
@@ -28,15 +26,6 @@ class SqlAlchemyUserRepository(UserRepository):
             result = await session.execute(select(UserORM).where(UserORM.id == user_id))
             row = result.scalar_one_or_none()
             return User(id=row.id, username=row.username, created_at=row.created_at) if row else None
-
-    async def get_or_create_seed_user(self) -> User:
-        # Check-then-create, not atomic - a benign race at this project's
-        # scale (a single seeded demo user, not a real signup flow). An
-        # upsert would close it but isn't worth the complexity here.
-        existing = await self.get_by_username(SEED_USERNAME)
-        if existing is not None:
-            return existing
-        return await self.create_user(SEED_USERNAME)
 
     async def create_user(self, username: str) -> User:
         async with self._session_factory() as session:

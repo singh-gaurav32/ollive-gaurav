@@ -18,10 +18,6 @@ class FakeUserRepository(UserRepository):
     async def get_by_id(self, user_id: UUID) -> User | None:
         return self.users.get(user_id)
 
-    async def get_or_create_seed_user(self) -> User:
-        existing = await self.get_by_username("demo")
-        return existing or await self.create_user("demo")
-
     async def create_user(self, username: str) -> User:
         user = User(username=username)
         self.users[user.id] = user
