@@ -2,9 +2,9 @@
 
 A chatbot with an auto-instrumented logging layer: every LLM call is captured, validated, PII-redacted, and persisted through an event-driven ingestion pipeline, with an observability dashboard (latency/throughput/error-rate) built on top. See [`docs/architecture-notes.md`](docs/architecture-notes.md) for the ingestion flow, logging strategy, scaling considerations, and failure handling assumptions in detail.
 
-**Live demo**: https://gaurav-ollive.duckdns.org (seeded demo users, no password — see below)
+**Live demo**: [https://gaurav-ollive.duckdns.org](https://gaurav-ollive.duckdns.org) (seeded demo users, no password — see below)
 
-**Architecture & design decisions, in the app**: https://gaurav-ollive.duckdns.org/about (no login required)
+**Architecture & design decisions, in the app**: [https://gaurav-ollive.duckdns.org/about](https://gaurav-ollive.duckdns.org/about) (no login required)
 
 ## Getting Started (Backend)
 
@@ -239,6 +239,12 @@ frontend/src/
 - **`failed_log_events`** — the dead-letter table: `model`, `provider`, `conversation_id`, `session_id`, `timestamp`, `failure_stage` (which of validate/extract/redact/persist failed), `failure_reason`. Deliberately **no** preview fields — a pipeline failure before redaction completes must never risk persisting unredacted text.
 
 `conversations`/`messages` (the chat data) and `logs`/`failed_log_events` (the observability data) are separate table families joined only loosely by `conversation_id`/`session_id` — a conversation can be fully reconstructed from `messages` alone even if every one of its `logs` rows were deleted, and vice versa. This was a deliberate boundary: chat functionality and observability shouldn't have a hard dependency on each other's schema.
+
+A few schema-level decisions worth stating explicitly, not just implying:
+
+- **UUID primary keys everywhere, not auto-increment integers** — conversation and message IDs appear directly in URLs (`/chat/:conversationId`) and in ownership-check queries (`WHERE id = ? AND user_id = ?`). Sequential integers would let one user guess at another user's conversation IDs by incrementing; UUIDs make that infeasible, which matters given per-user isolation is enforced at the query layer, not hidden in the UI.
+- **`extra` as a JSONB catch-all on `logs`, not normalized columns** — provider-specific metadata (e.g. Gemini's `finish_reason`) varies by provider and isn't fully known up front; `MetadataExtractor` is a deliberate pass-through in v1, an extension point for normalizing specific fields into real columns later if the dashboard ends up needing to query on them. JSONB avoids a migration for every new field a new provider might add, at the cost of that data not being indexable or queryable as cheaply as a first-class column would be.
+- **`failed_log_events` is a separate table, not a `status='failed'` row in `logs`** — a `logs` row has `input_preview`/`output_preview` columns; if a failed event just became a differently-statused row in the same table, those columns would still exist and could accidentally get populated with pre-redaction text on some future code path. A separate table with no preview columns at all makes that structurally impossible to write, not just a discipline someone has to maintain.
 
 ## Tradeoffs
 
