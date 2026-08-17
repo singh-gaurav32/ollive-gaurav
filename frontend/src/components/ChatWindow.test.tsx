@@ -27,6 +27,21 @@ describe("ChatWindow", () => {
     await waitFor(() => expect(screen.getByText("hi")).toBeInTheDocument());
   });
 
+  it("shows the user's own message immediately, before any token arrives", async () => {
+    vi.mocked(chatApi.sendMessage).mockImplementation(async () => new Promise(() => {})); // never resolves
+    const user = userEvent.setup();
+
+    renderWithClient(<ChatWindow conversationId="c1" />);
+    await waitFor(() => expect(screen.getByText("hi")).toBeInTheDocument());
+
+    await user.type(screen.getByPlaceholderText("Type a message..."), "hello");
+    await user.click(screen.getByText("Send"));
+
+    // No tokens have been emitted yet - the user's own message must not
+    // depend on the stream (or its completion) to appear.
+    await waitFor(() => expect(screen.getByText("hello")).toBeInTheDocument());
+  });
+
   it("streams tokens as they arrive and shows the cancel button while streaming", async () => {
     let capturedOnToken: ((content: string) => void) | undefined;
     vi.mocked(chatApi.sendMessage).mockImplementation(async (_id, _content, _signal, onToken) => {

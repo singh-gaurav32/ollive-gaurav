@@ -7,8 +7,9 @@ import { CancelButton } from "./CancelButton";
 export function ChatWindow({ conversationId }: { conversationId: string }) {
   const { data, isLoading } = useMessages(conversationId);
   const invalidate = useInvalidateMessages();
-  const { streamingContent, isStreaming, send, cancel } = useChatStream(conversationId, () =>
-    invalidate(conversationId),
+  const { streamingContent, isStreaming, pendingUserContent, send, cancel } = useChatStream(
+    conversationId,
+    () => invalidate(conversationId),
   );
 
   if (isLoading) {
@@ -21,6 +22,7 @@ export function ChatWindow({ conversationId }: { conversationId: string }) {
         {data?.messages.map((m) => (
           <MessageBubble key={m.id} role={m.role} content={m.content} />
         ))}
+        {pendingUserContent !== null && <MessageBubble role="user" content={pendingUserContent} />}
         {isStreaming && <MessageBubble role="assistant" content={streamingContent || "..."} />}
       </div>
       <div className="flex items-center gap-2 px-3">

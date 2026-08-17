@@ -4,6 +4,7 @@ import { cancelConversation, sendMessage } from "../api/chat";
 interface UseChatStreamResult {
   streamingContent: string;
   isStreaming: boolean;
+  pendingUserContent: string | null;
   send: (content: string) => Promise<void>;
   cancel: () => void;
 }
@@ -14,6 +15,11 @@ export function useChatStream(
 ): UseChatStreamResult {
   const [streamingContent, setStreamingContent] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  // Echoes the just-sent content immediately, before the round trip
+  // completes - the backend persists the user message before it ever
+  // touches the provider, but `data.messages` only reflects that once
+  // onComplete's invalidate() refetches, which is after the full stream.
+  const [pendingUserContent, setPendingUserContent] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // Cleanup on unmount mid-stream (Functional Design: "cleanup if the
@@ -27,6 +33,7 @@ export function useChatStream(
 
   const send = useCallback(
     async (content: string) => {
+      setPendingUserContent(content);
       setStreamingContent("");
       setIsStreaming(true);
       const controller = new AbortController();
@@ -42,6 +49,7 @@ export function useChatStream(
         }
       } finally {
         setIsStreaming(false);
+        setPendingUserContent(null);
         abortControllerRef.current = null;
         onComplete();
       }
@@ -57,5 +65,5 @@ export function useChatStream(
     void cancelConversation(conversationId);
   }, [conversationId]);
 
-  return { streamingContent, isStreaming, send, cancel };
+  return { streamingContent, isStreaming, pendingUserContent, send, cancel };
 }
