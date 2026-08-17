@@ -1,0 +1,44 @@
+classDiagram
+    class EventQueue {
+        <<interface>>
+        +consume() AsyncIterator~LogEvent~
+    }
+    class IngestionWorker {
+        -_queue: EventQueue
+        -_validator: PayloadValidator
+        -_extractor: MetadataExtractor
+        -_redactor: PIIRedactor
+        -_persister: LogPersister
+        -_failed_repo: FailedLogEventRepository
+        +run()
+        -_process(event)
+    }
+    class PayloadValidator {
+        +validate(event) LogEvent
+    }
+    class MetadataExtractor {
+        +extract(event) LogEvent
+    }
+    class PIIRedactor {
+        +redact(event) LogEvent
+    }
+    class LogPersister {
+        +persist(event)
+    }
+    class LogRepository {
+        <<interface>>
+    }
+    class FailedLogEventRepository {
+        <<interface>>
+        +insert(record)
+    }
+
+    EventQueue --> IngestionWorker : consume()
+    IngestionWorker --> PayloadValidator : 1. validate
+    IngestionWorker --> MetadataExtractor : 2. extract
+    IngestionWorker --> PIIRedactor : 3. redact
+    IngestionWorker --> LogPersister : 4. persist
+    LogPersister ..> LogRepository : maps to LogRecord
+    IngestionWorker ..> FailedLogEventRepository : on any stage failure -<br/>dead-letter, no preview<br/>text ever included
+
+    note for IngestionWorker "One failure never stops the loop (BR5): each event<br/>gets its own try/except across all 4 stages. The<br/>redaction guarantee is structural - no code path<br/>writes preview text to storage before PIIRedactor runs,<br/>success or failure."

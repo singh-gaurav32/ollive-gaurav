@@ -144,33 +144,155 @@ Then visit `https://YOUR-SUBDOMAIN.duckdns.org`.
 
 **Updating after changes**: repeat step 7's build/push for whichever image changed, then `sudo k3s kubectl -n ollive rollout restart deployment/api` (or `deployment/frontend`). No CI/CD — this is a manual, single-VM demo deployment by design.
 
-## Architecture Overview
+## High-Level Design
 
-```
-Browser (React SPA)
-   |  session cookie auth
-   v
-FastAPI backend
-   |-- auth/         session-based auth, seeded demo users, no passwords
-   |-- chat/         conversation lifecycle, context truncation, streaming + cancel
-   |-- provider/     LLMProvider interface -> GeminiProvider / OpenAIProvider
-   |                 (LLM_PROVIDER env var selects, defaults to gemini),
-   |                 wrapped by InstrumentedProvider (auto-captures a
-   |                 LogEvent per call, zero manual logging elsewhere)
-   |-- events/       in-process async queue (InProcessEventQueue)
-   |-- ingestion/    IngestionWorker (background asyncio task, same process):
-   |                 validate -> extract -> redact -> persist, dead-letters
-   |                 failures instead of dropping or crashing the loop
-   |-- api/          routers: auth, conversations (chat), dashboard (/metrics)
-   `-- db/           SQLAlchemy repositories + Alembic migrations
-   |
-   v
-PostgreSQL (+ pgvector extension provisioned, unused - see Tradeoffs)
+System-level view: major subsystems, external dependencies, and how data flows between them. Same diagram, rendered, at [/about](https://gaurav-ollive.duckdns.org/about) in the live app — source at [`docs/diagrams/hld.mmd`](docs/diagrams/hld.mmd).
+
+```mermaid
+flowchart TB
+    Browser["Browser<br/>React SPA"]
+
+    subgraph Backend["FastAPI Backend — single process"]
+        AuthMod["auth<br/>session-based, seeded demo users"]
+        ChatMod["chat<br/>conversation lifecycle,<br/>streaming + cancel"]
+        ProviderMod["provider<br/>LLMProvider interface<br/>+ InstrumentedProvider decorator"]
+        EventsMod["events<br/>in-process async queue"]
+        IngestionMod["ingestion<br/>validate → extract → redact → persist"]
+        DashboardMod["api: dashboard router<br/>/metrics aggregation"]
+    end
+
+    LLM["External LLM API<br/>Gemini / OpenAI"]
+    DB[("PostgreSQL")]
+
+    Browser -- "session cookie" --> AuthMod
+    Browser -- "chat requests (SSE stream)" --> ChatMod
+    Browser -- "metrics queries" --> DashboardMod
+
+    ChatMod --> ProviderMod
+    ProviderMod -- "LLM API call" --> LLM
+    ProviderMod -. "auto-captured LogEvent,<br/>never blocks the chat call" .-> EventsMod
+    EventsMod --> IngestionMod
+
+    ChatMod -- "conversations, messages" --> DB
+    IngestionMod -- "logs, failed_log_events" --> DB
+    DashboardMod -- "query_window()" --> DB
 ```
 
 Frontend (`frontend/`) is a Vite/React SPA: login, chat with streaming responses and mid-stream cancel, conversation list/resume, and the observability dashboard. Deployment (`docker-compose.yml` / `k8s/`) packages `postgres`, `api` (worker runs in-process inside it, not a separate service), and `frontend` (its own nginx container that also reverse-proxies API calls) — the same three-service shape locally and on the live k3s deployment.
 
 See [`docs/architecture-notes.md`](docs/architecture-notes.md) for the ingestion flow, logging strategy, scaling considerations, and failure handling assumptions.
+
+## Low-Level Design
+
+Two components carry the interesting design decisions in this system; the rest is a predictable, repetitive pattern (interface + one implementation) that's more useful to browse in the actual directory tree than to diagram class-by-class. Same diagrams, rendered, at [/about](https://gaurav-ollive.duckdns.org/about) — sources at [`docs/diagrams/lld-provider.mmd`](docs/diagrams/lld-provider.mmd) and [`docs/diagrams/lld-ingestion.mmd`](docs/diagrams/lld-ingestion.mmd).
+
+**LLM provider — Strategy + Decorator**
+
+```mermaid
+classDiagram
+    class LLMProvider {
+        <<interface>>
+        +send(messages) ProviderResponse
+        +stream(messages) AsyncIterator~Token~
+    }
+    class GeminiProvider {
+        +send(messages) ProviderResponse
+        +stream(messages) AsyncIterator~Token~
+    }
+    class OpenAIProvider {
+        +send(messages) ProviderResponse
+        +stream(messages) AsyncIterator~Token~
+    }
+    class InstrumentedProvider {
+        -wrapped: LLMProvider
+        -event_queue: EventQueue
+        +send(messages) ProviderResponse
+        +stream(messages) AsyncIterator~Token~
+    }
+    class EventQueue {
+        <<interface>>
+        +publish(event)
+    }
+
+    LLMProvider <|.. GeminiProvider : Strategy
+    LLMProvider <|.. OpenAIProvider : Strategy
+    LLMProvider <|.. InstrumentedProvider : also implements LLMProvider
+    InstrumentedProvider o-- LLMProvider : wraps (Decorator)
+    InstrumentedProvider ..> EventQueue : publishes a LogEvent\nper call, never blocks
+
+    note for LLMProvider "Selected at runtime by a small factory\nreading LLM_PROVIDER (deps.py) - ChatService\nonly ever depends on this interface, never\non a concrete provider."
+    note for InstrumentedProvider "The single interception point for observability -\nno logging call exists anywhere else in the codebase.\nInstrumentation failures are swallowed here;\nprovider failures are always re-raised."
+```
+
+**Ingestion pipeline**
+
+```mermaid
+classDiagram
+    class EventQueue {
+        <<interface>>
+        +consume() AsyncIterator~LogEvent~
+    }
+    class IngestionWorker {
+        -_queue: EventQueue
+        -_validator: PayloadValidator
+        -_extractor: MetadataExtractor
+        -_redactor: PIIRedactor
+        -_persister: LogPersister
+        -_failed_repo: FailedLogEventRepository
+        +run()
+        -_process(event)
+    }
+    class PayloadValidator {
+        +validate(event) LogEvent
+    }
+    class MetadataExtractor {
+        +extract(event) LogEvent
+    }
+    class PIIRedactor {
+        +redact(event) LogEvent
+    }
+    class LogPersister {
+        +persist(event)
+    }
+    class LogRepository {
+        <<interface>>
+    }
+    class FailedLogEventRepository {
+        <<interface>>
+        +insert(record)
+    }
+
+    EventQueue --> IngestionWorker : consume()
+    IngestionWorker --> PayloadValidator : 1. validate
+    IngestionWorker --> MetadataExtractor : 2. extract
+    IngestionWorker --> PIIRedactor : 3. redact
+    IngestionWorker --> LogPersister : 4. persist
+    LogPersister ..> LogRepository : maps to LogRecord
+    IngestionWorker ..> FailedLogEventRepository : on any stage failure -\ndead-letter, no preview\ntext ever included
+
+    note for IngestionWorker "One failure never stops the loop (BR5): each event\ngets its own try/except across all 4 stages. The\nredaction guarantee is structural - no code path\nwrites preview text to storage before PIIRedactor runs,\nsuccess or failure."
+```
+
+**Everything else, by directory:**
+
+```
+backend/src/
+  auth/        session-based auth, seeded demo users
+  chat/        ChatService - conversation lifecycle, streaming + cancel
+  provider/    LLMProvider, GeminiProvider/OpenAIProvider, InstrumentedProvider (see above)
+  events/      EventQueue interface + InProcessEventQueue
+  ingestion/   IngestionWorker + pipeline stages (see above)
+  api/         routers (auth, chat, dashboard) + deps.py, the composition root
+  db/          repository interfaces + SQLAlchemy implementations + Alembic migrations
+  analytics/   thin AnalyticsService delegating to LogRepository
+
+frontend/src/
+  api/         fetch wrappers, one file per backend router
+  hooks/       React Query hooks + useChatStream (hand-parsed SSE client)
+  components/  presentational components
+  pages/       route-level composition
+  context/     AuthContext
+```
 
 ## Schema Design
 

@@ -1,0 +1,33 @@
+classDiagram
+    class LLMProvider {
+        <<interface>>
+        +send(messages) ProviderResponse
+        +stream(messages) AsyncIterator~Token~
+    }
+    class GeminiProvider {
+        +send(messages) ProviderResponse
+        +stream(messages) AsyncIterator~Token~
+    }
+    class OpenAIProvider {
+        +send(messages) ProviderResponse
+        +stream(messages) AsyncIterator~Token~
+    }
+    class InstrumentedProvider {
+        -wrapped: LLMProvider
+        -event_queue: EventQueue
+        +send(messages) ProviderResponse
+        +stream(messages) AsyncIterator~Token~
+    }
+    class EventQueue {
+        <<interface>>
+        +publish(event)
+    }
+
+    LLMProvider <|.. GeminiProvider : Strategy
+    LLMProvider <|.. OpenAIProvider : Strategy
+    LLMProvider <|.. InstrumentedProvider : also implements LLMProvider
+    InstrumentedProvider o-- LLMProvider : wraps (Decorator)
+    InstrumentedProvider ..> EventQueue : publishes a LogEvent<br/>per call, never blocks
+
+    note for LLMProvider "Selected at runtime by a small factory<br/>reading LLM_PROVIDER (deps.py) - ChatService<br/>only ever depends on this interface, never<br/>on a concrete provider."
+    note for InstrumentedProvider "The single interception point for observability -<br/>no logging call exists anywhere else in the codebase.<br/>Instrumentation failures are swallowed here;<br/>provider failures are always re-raised."

@@ -1,0 +1,27 @@
+flowchart TB
+    Browser["Browser<br/>React SPA"]
+
+    subgraph Backend["FastAPI Backend — single process"]
+        AuthMod["auth<br/>session-based, seeded demo users"]
+        ChatMod["chat<br/>conversation lifecycle,<br/>streaming + cancel"]
+        ProviderMod["provider<br/>LLMProvider interface<br/>+ InstrumentedProvider decorator"]
+        EventsMod["events<br/>in-process async queue"]
+        IngestionMod["ingestion<br/>validate → extract → redact → persist"]
+        DashboardMod["api: dashboard router<br/>/metrics aggregation"]
+    end
+
+    LLM["External LLM API<br/>Gemini / OpenAI"]
+    DB[("PostgreSQL")]
+
+    Browser -- "session cookie" --> AuthMod
+    Browser -- "chat requests (SSE stream)" --> ChatMod
+    Browser -- "metrics queries" --> DashboardMod
+
+    ChatMod --> ProviderMod
+    ProviderMod -- "LLM API call" --> LLM
+    ProviderMod -. "auto-captured LogEvent,<br/>never blocks the chat call" .-> EventsMod
+    EventsMod --> IngestionMod
+
+    ChatMod -- "conversations, messages" --> DB
+    IngestionMod -- "logs, failed_log_events" --> DB
+    DashboardMod -- "query_window()" --> DB

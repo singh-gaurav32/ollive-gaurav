@@ -19,26 +19,6 @@ function Term({ term, children }: { term: string; children: React.ReactNode }) {
   );
 }
 
-const ARCHITECTURE_DIAGRAM = `Browser (React SPA)
-   |  session cookie auth
-   v
-FastAPI backend
-   |-- auth/         session-based auth, seeded demo users, no passwords
-   |-- chat/         conversation lifecycle, context truncation, streaming + cancel
-   |-- provider/     LLMProvider interface -> GeminiProvider / OpenAIProvider
-   |                 (LLM_PROVIDER env var selects, defaults to gemini),
-   |                 wrapped by InstrumentedProvider (auto-captures a
-   |                 LogEvent per call, zero manual logging elsewhere)
-   |-- events/       in-process async queue (InProcessEventQueue)
-   |-- ingestion/    IngestionWorker (background asyncio task, same process):
-   |                 validate -> extract -> redact -> persist, dead-letters
-   |                 failures instead of dropping or crashing the loop
-   |-- api/          routers: auth, conversations (chat), dashboard (/metrics)
-   \`-- db/           SQLAlchemy repositories + Alembic migrations
-   |
-   v
-PostgreSQL (+ pgvector extension provisioned, unused)`;
-
 export function AboutPage() {
   const { user } = useAuth();
 
@@ -76,10 +56,13 @@ export function AboutPage() {
           </ul>
         </Section>
 
-        <Section title="Architecture">
-          <pre className="overflow-x-auto rounded-md bg-gray-900 p-4 text-xs leading-relaxed text-gray-100">
-            {ARCHITECTURE_DIAGRAM}
-          </pre>
+        <Section title="High-Level Design">
+          <p>System-level view: major subsystems, external dependencies, and how data flows between them.</p>
+          <img
+            src="/diagrams/hld.svg"
+            alt="High-level architecture: browser talks to the FastAPI backend's auth, chat, and dashboard modules over a session cookie; chat calls the provider module, which calls the external LLM API and also auto-publishes a LogEvent to the events queue without blocking; the ingestion module consumes that queue and persists to Postgres; chat and dashboard read/write Postgres directly."
+            className="w-full rounded-md border border-gray-200 bg-white p-2"
+          />
           <p>
             The ingestion worker runs as a background task <em>inside</em> the same API process, not a
             separate service — one fewer moving part for a demo-scale deployment, at the cost of the API
@@ -88,6 +71,48 @@ export function AboutPage() {
             frontend as three containers, the same shape locally (<code>docker-compose.yml</code>) and on
             the live k3s deployment (<code>k8s/</code>).
           </p>
+        </Section>
+
+        <Section title="Low-Level Design">
+          <p>
+            Two components carry the interesting design decisions in this system; the rest is a
+            predictable, repetitive pattern (interface + one implementation) that's more useful to browse
+            in the actual directory tree below than to diagram class-by-class.
+          </p>
+
+          <h3 className="pt-2 text-sm font-semibold text-gray-900">LLM provider — Strategy + Decorator</h3>
+          <img
+            src="/diagrams/lld-provider.svg"
+            alt="LLMProvider is an interface implemented by GeminiProvider and OpenAIProvider (Strategy), and also by InstrumentedProvider, which wraps another LLMProvider and adds transparent logging (Decorator) by publishing a LogEvent to the EventQueue interface without blocking the call."
+            className="w-full rounded-md border border-gray-200 bg-white p-2"
+          />
+
+          <h3 className="pt-4 text-sm font-semibold text-gray-900">Ingestion pipeline</h3>
+          <img
+            src="/diagrams/lld-ingestion.svg"
+            alt="IngestionWorker consumes LogEvents from the EventQueue and runs each one through four stages in order: PayloadValidator, MetadataExtractor, PIIRedactor, then LogPersister, which maps to LogRepository. A failure at any stage is dead-lettered to FailedLogEventRepository, with no preview text ever included, and the loop continues to the next event."
+            className="w-full rounded-md border border-gray-200 bg-white p-2"
+          />
+
+          <h3 className="pt-4 text-sm font-semibold text-gray-900">Everything else, by directory</h3>
+          <pre className="overflow-x-auto rounded-md bg-gray-900 p-4 text-xs leading-relaxed text-gray-100">
+{`backend/src/
+  auth/        session-based auth, seeded demo users
+  chat/        ChatService - conversation lifecycle, streaming + cancel
+  provider/    LLMProvider, GeminiProvider/OpenAIProvider, InstrumentedProvider (see above)
+  events/      EventQueue interface + InProcessEventQueue
+  ingestion/   IngestionWorker + pipeline stages (see above)
+  api/         routers (auth, chat, dashboard) + deps.py, the composition root
+  db/          repository interfaces + SQLAlchemy implementations + Alembic migrations
+  analytics/   thin AnalyticsService delegating to LogRepository
+
+frontend/src/
+  api/         fetch wrappers, one file per backend router
+  hooks/       React Query hooks + useChatStream (hand-parsed SSE client)
+  components/  presentational components
+  pages/       route-level composition
+  context/     AuthContext`}
+          </pre>
         </Section>
 
         <Section title="Design decisions">
