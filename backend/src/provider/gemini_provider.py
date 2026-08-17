@@ -8,17 +8,31 @@ from collections.abc import AsyncIterator
 from uuid import UUID
 
 from google import genai
+from google.genai.types import GenerateContentConfig
 
 from .interface import LLMProvider, ProviderError, ProviderResponse
 from .models import Message, Role, Token
 
 _ROLE_MAP = {Role.USER: "user", Role.ASSISTANT: "model", Role.SYSTEM: "user"}
 
+# gemini-3-flash-preview is a "thinking" model - internal reasoning tokens
+# count against this same budget before any visible output tokens. A cap set
+# too low (e.g. ~20) can be entirely consumed by thinking, leaving no room
+# for actual response text. 2048 gives enough headroom for that not to bite
+# on typical chat-length prompts; confirmed via a real API call, not assumed.
+DEFAULT_MAX_OUTPUT_TOKENS = 2048
+
 
 class GeminiProvider(LLMProvider):
-    def __init__(self, api_key: str, model: str = "gemini-3-flash-preview") -> None:
+    def __init__(
+        self,
+        api_key: str,
+        model: str = "gemini-3-flash-preview",
+        max_output_tokens: int = DEFAULT_MAX_OUTPUT_TOKENS,
+    ) -> None:
         self._client = genai.Client(api_key=api_key)
         self.model = model
+        self._config = GenerateContentConfig(max_output_tokens=max_output_tokens)
 
     def _to_genai_contents(self, messages: list[Message]) -> list[dict]:
         # NOTE: Gemini's contents API has no first-class "system" role;
@@ -36,6 +50,7 @@ class GeminiProvider(LLMProvider):
             response = await self._client.aio.models.generate_content(
                 model=self.model,
                 contents=self._to_genai_contents(messages),
+                config=self._config,
             )
         except Exception as exc:  # noqa: BLE001 - normalize any provider error
             raise ProviderError(str(exc), provider="gemini", original=exc) from exc
@@ -55,6 +70,7 @@ class GeminiProvider(LLMProvider):
             stream = await self._client.aio.models.generate_content_stream(
                 model=self.model,
                 contents=self._to_genai_contents(messages),
+                config=self._config,
             )
             async for chunk in stream:
                 usage = getattr(chunk, "usage_metadata", None)

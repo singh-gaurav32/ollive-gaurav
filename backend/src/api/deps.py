@@ -48,7 +48,10 @@ def get_event_queue() -> InProcessEventQueue:
 def get_chat_service() -> ChatService:
     conversation_repo = SqlAlchemyConversationRepository(session_factory)
     message_repo = SqlAlchemyMessageRepository(session_factory)
-    gemini = GeminiProvider(api_key=os.environ["GEMINI_API_KEY"])
+    gemini = GeminiProvider(
+        api_key=os.environ["GEMINI_API_KEY"],
+        max_output_tokens=int(os.environ.get("GEMINI_MAX_OUTPUT_TOKENS", "2048")),
+    )
     instrumented = InstrumentedProvider(gemini, get_event_queue(), provider_name="gemini")
     return ChatService(
         instrumented_provider=instrumented,

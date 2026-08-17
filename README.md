@@ -43,6 +43,7 @@ Environment variables — root `.env` (for `docker compose`, see `.env.example`)
 ```
 DATABASE_URL=postgresql+asyncpg://ollive:ollive@localhost:5432/ollive
 GEMINI_API_KEY=your-key-here
+GEMINI_MAX_OUTPUT_TOKENS=2048   # optional, caps worst-case response length/cost; this is the default
 ```
 
 ## Getting Started (Frontend)
