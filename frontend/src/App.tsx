@@ -4,6 +4,7 @@ import { NavBar } from "./components/NavBar";
 import { LoginPage } from "./pages/LoginPage";
 import { ChatPage } from "./pages/ChatPage";
 import { DashboardPage } from "./pages/DashboardPage";
+import { AboutPage } from "./pages/AboutPage";
 
 function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -26,6 +27,7 @@ export function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/about" element={<AboutPage />} />
       <Route
         path="/chat"
         element={

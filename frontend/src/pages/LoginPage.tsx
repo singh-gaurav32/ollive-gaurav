@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { listDemoUsers } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
 import type { User } from "../types";
@@ -46,6 +46,12 @@ export function LoginPage() {
             </button>
           ))}
         </div>
+        <Link
+          to="/about"
+          className="mt-4 block text-center text-sm text-gray-500 hover:text-gray-700 hover:underline"
+        >
+          What is this? (architecture &amp; design decisions)
+        </Link>
       </div>
     </div>
   );

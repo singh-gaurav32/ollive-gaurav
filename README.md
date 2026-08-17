@@ -4,6 +4,8 @@ A chatbot with an auto-instrumented logging layer: every LLM call is captured, v
 
 **Live demo**: https://gaurav-ollive.duckdns.org (seeded demo users, no password — see below)
 
+**Architecture & design decisions, in the app**: https://gaurav-ollive.duckdns.org/about (no login required)
+
 ## Getting Started (Backend)
 
 Requires [uv](https://docs.astral.sh/uv/), Python 3.12, and Docker (for Postgres).

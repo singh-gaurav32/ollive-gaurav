@@ -14,6 +14,9 @@ export function NavBar() {
         <Link to="/dashboard" className="text-sm text-gray-600 hover:text-gray-900">
           Dashboard
         </Link>
+        <Link to="/about" className="text-sm text-gray-600 hover:text-gray-900">
+          About
+        </Link>
       </div>
       <div className="flex items-center gap-3">
         <span className="text-sm text-gray-500">{user?.username}</span>
