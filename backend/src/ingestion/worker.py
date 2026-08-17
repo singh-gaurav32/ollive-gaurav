@@ -67,4 +67,18 @@ class IngestionWorker:
         try:
             await self._failed_repo.insert(failed)
         except Exception:  # noqa: BLE001 - last-resort fallback, business-logic-model step 5
-            logger.critical("Failed to dead-letter event and failed to record failure", exc_info=True)
+            # exc_info=True here would only capture *this* insert's failure -
+            # the original pipeline-stage exception (why _record_failure was
+            # called at all) has to be logged explicitly or it's lost.
+            logger.critical(
+                "Failed to dead-letter event and failed to record failure: "
+                "stage=%s model=%s provider=%s conversation_id=%s session_id=%s "
+                "original_failure_reason=%s",
+                stage,
+                event.model,
+                event.provider,
+                event.conversation_id,
+                event.session_id,
+                exc,
+                exc_info=True,
+            )

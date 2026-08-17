@@ -88,3 +88,10 @@ async def test_dead_letter_write_failure_falls_back_to_logging_not_a_crash(caplo
     await worker._process(_event())  # must not raise
 
     assert "Failed to dead-letter" in caplog.text
+    # The last-resort log must carry the *original* failure context (which
+    # stage, which event, why) - not just the fact that the dead-letter
+    # write itself also failed, which is all exc_info=True alone would give.
+    assert "stage=persist" in caplog.text
+    assert "model=m" in caplog.text
+    assert "provider=p" in caplog.text
+    assert "db down" in caplog.text  # the original persist() exception, not the dead-letter one
