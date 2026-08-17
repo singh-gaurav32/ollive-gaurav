@@ -16,7 +16,12 @@ async def test_send_returns_content_and_token_usage():
         mock_response = MagicMock()
         mock_response.text = "hello back"
         mock_response.usage_metadata = MagicMock(prompt_token_count=4, candidates_token_count=3)
-        mock_response.finish_reason = "STOP"
+        # finish_reason lives on the candidate, not the top-level response -
+        # matches the real GenerateContentResponse shape (see gemini_provider.py).
+        # A bare MagicMock() here would have silently satisfied the old,
+        # wrong `response.finish_reason` access too (via auto-configured
+        # __getitem__), which is exactly how that bug went undetected.
+        mock_response.candidates = [MagicMock(finish_reason="STOP")]
 
         mock_client = MagicMock()
         mock_client.aio.models.generate_content = AsyncMock(return_value=mock_response)
@@ -34,6 +39,7 @@ async def test_send_returns_content_and_token_usage():
         assert result.content == "hello back"
         assert result.input_tokens == 4
         assert result.output_tokens == 3
+        assert result.raw["finish_reason"] == "STOP"
 
 
 async def test_send_wraps_provider_exceptions():

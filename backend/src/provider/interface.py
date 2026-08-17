@@ -5,8 +5,6 @@ InstrumentedProvider only) so every implementation honors the same contract -
 GeminiProvider accepts and ignores them; InstrumentedProvider uses them to
 populate LogEvent. Keeps the Decorator relationship strictly substitutable.
 
-See aidlc-docs/inception/application-design/components.md for the design
-rationale.
 """
 from __future__ import annotations
 

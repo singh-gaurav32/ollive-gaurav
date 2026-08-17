@@ -56,11 +56,15 @@ class GeminiProvider(LLMProvider):
             raise ProviderError(str(exc), provider="gemini", original=exc) from exc
 
         usage = getattr(response, "usage_metadata", None)
+        # finish_reason lives on the candidate, not the top-level response -
+        # getattr(response, "finish_reason", None) silently returned None
+        # always (no such attribute), caught via a real API call, not a mock.
+        finish_reason = response.candidates[0].finish_reason if response.candidates else None
         return ProviderResponse(
             content=response.text or "",
             input_tokens=getattr(usage, "prompt_token_count", None) if usage else None,
             output_tokens=getattr(usage, "candidates_token_count", None) if usage else None,
-            raw={"finish_reason": getattr(response, "finish_reason", None)},
+            raw={"finish_reason": finish_reason},
         )
 
     async def stream(
