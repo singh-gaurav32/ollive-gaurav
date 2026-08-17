@@ -13,8 +13,8 @@ Picked up from a live deployment/review session on 2026-08-17. Ordered roughly b
 
 ## 2. Small fixes identified during live deployment review
 
-- [ ] **Dashboard bucket window isn't user-configurable in the UI.** The backend already supports `bucket_size_seconds`/`start`/`end` query params (`GET /metrics`), but the frontend hardcodes no params (always last-1h/60s) — `frontend/src/api/metrics.ts`. Add UI controls (bucket-size dropdown, time-range picker) and wire them through `useMetrics`.
-- [ ] **No cap on Gemini output length or request rate.** `gemini_provider.py`'s calls pass no `max_output_tokens`/`generation_config` — Gemini's own model default applies, uncapped by our code. No rate limiting exists either. Options: add `max_output_tokens` to the provider call (bounds worst-case response length/cost), and/or set a spend cap directly in Google AI Studio's billing settings for the API key (authoritative, independent of app code).
+- [x] **Dashboard bucket window is now user-configurable in the UI** (2026-08-17). Added bucket-size (30s/1m/5m/15m/1h) and range (1h/6h/24h) dropdowns to `DashboardPage.tsx`, wired through `useMetrics`/`api/metrics.ts` to the backend's existing `bucket_size_seconds`/`start`/`end` params. Also fixed the "Requests (last 1h)" summary label to reflect whatever range is actually selected. Verified locally and live.
+- [x] **Gemini output length now capped** (2026-08-17). `GeminiProvider` passes `GenerateContentConfig(max_output_tokens=...)` on every call, default 2048, overridable via `GEMINI_MAX_OUTPUT_TOKENS`. Found via real-API testing that `gemini-3-flash-preview`'s internal "thinking" tokens count against this same budget — a cap set too low (~20) can starve visible output entirely; 2048 confirmed to leave real headroom. Verified locally against the real API before redeploying. **Still open**: no request-rate limiting exists — that's a separate concern (Google AI Studio's own billing/spend cap is the authoritative guard for that, independent of app code).
 
 ## 3. Bonus opportunity: multi-provider support
 
