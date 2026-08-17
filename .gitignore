@@ -1,6 +1,8 @@
-# AI-DLC framework files (process tooling, not part of the deliverable)
+# AI-DLC framework files and internal process trail (not part of the deliverable
+# for evaluators - see docs/ for the curated architecture/design writeup instead)
 CLAUDE.md
 .aidlc-rule-details/
+aidlc-docs/
 
 # Python
 __pycache__/
