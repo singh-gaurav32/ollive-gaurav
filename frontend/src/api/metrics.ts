@@ -1,8 +1,22 @@
 import { apiJson } from "./client";
 import type { MetricBucket } from "../types";
 
-export function getMetrics(): Promise<MetricBucket[]> {
-  // No client-side params in v1 - always requests the backend's own
-  // defaults (last 1h, 60s buckets). See functional-design/frontend-components.md.
-  return apiJson("/metrics");
+export interface MetricsQuery {
+  bucketSizeSeconds?: number;
+  windowHours?: number;
+}
+
+export function getMetrics(query: MetricsQuery = {}): Promise<MetricBucket[]> {
+  const params = new URLSearchParams();
+  if (query.bucketSizeSeconds) {
+    params.set("bucket_size_seconds", String(query.bucketSizeSeconds));
+  }
+  if (query.windowHours) {
+    const end = new Date();
+    const start = new Date(end.getTime() - query.windowHours * 60 * 60 * 1000);
+    params.set("start", start.toISOString());
+    params.set("end", end.toISOString());
+  }
+  const qs = params.toString();
+  return apiJson(`/metrics${qs ? `?${qs}` : ""}`);
 }

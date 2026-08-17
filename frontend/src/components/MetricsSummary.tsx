@@ -13,7 +13,13 @@ function latestP95(buckets: MetricBucket[]): number | null {
   return withLatency?.p95_latency_ms ?? null;
 }
 
-export function MetricsSummary({ buckets }: { buckets: MetricBucket[] }) {
+export function MetricsSummary({
+  buckets,
+  windowLabel = "last 1h",
+}: {
+  buckets: MetricBucket[];
+  windowLabel?: string;
+}) {
   const requests = totalRequests(buckets);
   const errors = totalErrors(buckets);
   const errorRate = requests > 0 ? ((errors / requests) * 100).toFixed(1) : "0.0";
@@ -21,7 +27,7 @@ export function MetricsSummary({ buckets }: { buckets: MetricBucket[] }) {
 
   return (
     <div className="grid grid-cols-3 gap-4">
-      <StatTile label="Requests (last 1h)" value={requests.toString()} />
+      <StatTile label={`Requests (${windowLabel})`} value={requests.toString()} />
       <StatTile label="Error rate" value={`${errorRate}%`} />
       <StatTile label="p95 latency" value={p95 !== null ? `${p95.toFixed(0)}ms` : "—"} />
     </div>
