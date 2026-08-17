@@ -148,6 +148,71 @@ async def test_cancel_finds_and_cancels_the_correct_running_task():
     assert updated.state == "cancelled"
 
 
+async def test_cancel_from_a_different_pod_is_picked_up_by_the_db_poll():
+    """BR6 horizontal-scaling fix: simulates a cancel_conversation call that
+    landed on a *different* pod - the conversation's state is flipped
+    directly in the shared repository, exactly as a different pod's
+    cancel_conversation would via update_state, but WITHOUT ever going
+    through this ChatService's own cancel_conversation or _active_streams.
+    There is no Task handle a different pod could ever have reached, so if
+    this test passes, only the DB poll inside _run() could have caused the
+    cancellation."""
+
+    class SlowFakeProvider(FakeLLMProvider):
+        def __init__(self) -> None:
+            super().__init__()
+            self.first_token_yielded = asyncio.Event()
+            self.may_continue = asyncio.Event()
+
+        async def stream(self, messages, *, conversation_id, session_id):
+            yield Token(content="Hel")
+            self.first_token_yielded.set()
+            await self.may_continue.wait()
+            yield Token(content="lo")
+            # A real provider's next token always involves a genuine network
+            # suspension - this sleep stands in for that, giving the
+            # self-cancel triggered below something to actually interrupt.
+            await asyncio.sleep(3600)
+            yield Token(content=" unreachable")  # pragma: no cover
+
+    fake_provider = SlowFakeProvider()
+    conversation_repo = FakeConversationRepository()
+    message_repo = FakeMessageRepository()
+    instrumented = InstrumentedProvider(fake_provider, FakeEventQueue(), provider_name="fake")
+    service = ChatService(
+        instrumented_provider=instrumented,
+        conversation_repository=conversation_repo,
+        message_repository=message_repo,
+        truncation_strategy=WindowTruncationStrategy(),
+        cancellation_poll_interval_seconds=0.0,  # poll every token - deterministic, no real sleeps
+    )
+    user_id = uuid4()
+    conversation = await service.start_conversation(user_id)
+
+    collected: list[str] = []
+
+    async def consume() -> None:
+        async for token in service.send_message(conversation.id, user_id, "hi", session_id=user_id):
+            collected.append(token.content)
+
+    consumer_task = asyncio.create_task(consume())
+    await fake_provider.first_token_yielded.wait()
+
+    # The "different pod": writes straight to the shared repository, never
+    # touching this ChatService instance's cancel_conversation or
+    # _active_streams at all.
+    await conversation_repo.update_state(conversation.id, "cancelled")
+    fake_provider.may_continue.set()
+
+    with pytest.raises(asyncio.CancelledError):
+        await consumer_task
+
+    assert collected == ["Hel", "lo"]
+    history = await message_repo.list_for_conversation(conversation.id)
+    assert history[-1].role == "assistant"
+    assert history[-1].content == "Hello"
+
+
 async def test_resume_transitions_cancelled_to_active_and_returns_history():
     fake_provider = FakeLLMProvider()
     service, conversations, messages = _make_service(fake_provider)
